@@ -1,0 +1,10 @@
+{
+  "domain": "woningwaarde",
+  "name": "Woningwaarde",
+  "documentation": "https://www.example.com",
+  "requirements": [
+    "bs4==0.0.1"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
