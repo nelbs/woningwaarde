@@ -1,4 +1,4 @@
-# Wonigwaarde
+# Woningwaarde
 This platform scrapes the actual price of a house from berekenhet.nl. It creates the folowing sensor:
 
 - sensor.woningwaarde
