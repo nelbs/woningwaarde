@@ -1,6 +1,7 @@
 {
   "domain": "woningwaarde",
   "name": "Woningwaarde",
+  "version": "0.1",
   "documentation": "https://www.example.com",
   "requirements": [
     "bs4==0.0.1"
