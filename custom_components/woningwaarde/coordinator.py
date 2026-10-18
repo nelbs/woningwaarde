@@ -6,8 +6,8 @@ from datetime import timedelta
 import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .calculate import calculate
-from .const import DOMAIN, REGION_TABLE, TYPE_TABLE
+from .calculate import calculate_combined
+from .const import DOMAIN, REGION_TABLE, TYPE_TABLE, selections
 
 
 class WoningCoordinator(DataUpdateCoordinator):
@@ -24,14 +24,17 @@ class WoningCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         data = self.entry.data
-        series = data["series"]
-        table = TYPE_TABLE if series.startswith("ZW") else REGION_TABLE
-        dimension = "TypeWoning" if table == TYPE_TABLE else "RegioS"
+        region, woningtype = selections(data)
         try:
-            rows = await self.client.rows(table)
-            result = calculate(
-                [r for r in rows if r[dimension].strip() == series], data
-            )
+            rows = await self.client.rows(REGION_TABLE)
+            regional = [r for r in rows if r["RegioS"].strip() == region]
+            national = [r for r in rows if r["RegioS"].strip() == "NL01"]
+            if woningtype == "T001100":
+                typed = national
+            else:
+                type_rows = await self.client.rows(TYPE_TABLE)
+                typed = [r for r in type_rows if r["TypeWoning"].strip() == woningtype]
+            result = calculate_combined(regional, typed, national, data)
         except (
             aiohttp.ClientError,
             TimeoutError,
@@ -40,4 +43,11 @@ class WoningCoordinator(DataUpdateCoordinator):
             TypeError,
         ) as err:
             raise UpdateFailed(f"CBS index could not be updated: {err}") from err
-        return {**result, "series": series, "table": table}
+        return {
+            **result,
+            "region": region,
+            "woningtype": woningtype,
+            "tables": [REGION_TABLE]
+            if woningtype == "T001100"
+            else [REGION_TABLE, TYPE_TABLE],
+        }

@@ -4,24 +4,26 @@
     "step": {
       "user": {
         "title": "Woningwaarde",
-        "description": "Choose a regional series (all house types) or a national house-type series. These cannot be combined. Use a distinct ID for each house.",
+        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.",
         "data": {
           "house_id": "House ID (unique and permanent)",
           "name": "Name",
-          "series": "CBS series",
           "waarde": "Known value (EUR)",
-          "datum": "Reference date"
+          "datum": "Reference date",
+          "region": "Province or municipality",
+          "woningtype": "House type"
         }
       },
       "reconfigure": {
         "title": "Woningwaarde",
-        "description": "Choose a regional series (all house types) or a national house-type series. These cannot be combined. Use a distinct ID for each house.",
+        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.",
         "data": {
           "house_id": "House ID (unique and permanent)",
           "name": "Name",
-          "series": "CBS series",
           "waarde": "Known value (EUR)",
-          "datum": "Reference date"
+          "datum": "Reference date",
+          "region": "Province or municipality",
+          "woningtype": "House type"
         }
       }
     },

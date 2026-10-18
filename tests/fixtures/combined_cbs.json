@@ -1,0 +1,38 @@
+{
+  "PV25": [
+    {
+      "RegioS": "PV25  ",
+      "Perioden": "2020KW01",
+      "PrijsindexVerkoopprijzen_1": 96.7
+    },
+    {
+      "RegioS": "PV25  ",
+      "Perioden": "2026KW02",
+      "PrijsindexVerkoopprijzen_1": 164.4
+    }
+  ],
+  "NL01": [
+    {
+      "RegioS": "NL01  ",
+      "Perioden": "2020KW01",
+      "PrijsindexVerkoopprijzen_1": 96.9
+    },
+    {
+      "RegioS": "NL01  ",
+      "Perioden": "2026KW02",
+      "PrijsindexVerkoopprijzen_1": 154.9
+    }
+  ],
+  "ZW10300": [
+    {
+      "TypeWoning": "ZW10300",
+      "Perioden": "2020KW01",
+      "PrijsindexVerkoopprijzen_1": 96.8
+    },
+    {
+      "TypeWoning": "ZW10300",
+      "Perioden": "2026KW02",
+      "PrijsindexVerkoopprijzen_1": 157
+    }
+  ]
+}

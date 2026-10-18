@@ -41,3 +41,19 @@ SERIES.update(
         "ZW25810": "Nederland - appartement",
     }
 )
+
+REGIONS = {key: label for key, label in SERIES.items() if not key.startswith("ZW")}
+HOUSE_TYPES = {"T001100": "Alle woningtypen"} | {
+    key: label.removeprefix("Nederland - ")
+    for key, label in SERIES.items()
+    if key.startswith("ZW")
+}
+
+
+def selections(data):
+    """Keep old single-series configurations equivalent until reconfigured."""
+    old = data.get("series", "NL01")
+    return (
+        data.get("region", "NL01" if old.startswith("ZW") else old),
+        data.get("woningtype", old if old.startswith("ZW") else "T001100"),
+    )

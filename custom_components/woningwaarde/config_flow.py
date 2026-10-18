@@ -5,18 +5,18 @@ from homeassistant import config_entries
 from homeassistant.helpers import selector
 
 from .calculate import validate
-from .const import DOMAIN, SERIES
+from .const import DOMAIN, HOUSE_TYPES, REGIONS, selections
 
 
 def schema(defaults=None):
     defaults = defaults or {}
+    region, woningtype = selections(defaults)
     return vol.Schema(
         {
             vol.Required("house_id", default=defaults.get("house_id", "")): str,
             vol.Required("name", default=defaults.get("name", "Woning")): str,
-            vol.Required("series", default=defaults.get("series", "NL01")): vol.In(
-                SERIES
-            ),
+            vol.Required("region", default=region): vol.In(REGIONS),
+            vol.Required("woningtype", default=woningtype): vol.In(HOUSE_TYPES),
             vol.Required("waarde", default=defaults.get("waarde", 250000)): vol.Coerce(
                 float
             ),

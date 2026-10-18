@@ -26,3 +26,7 @@ python -m compileall -q custom_components
 ```
 
 Versie 1.0.1: drie extra regressietests voor de ingevoerde woningnaam (inclusief haviklaan 28), sensoridentiteit bij hernoemen en het standaard huisicoon. De HA-grens blijft gestubd; geen live installatieproef uitgevoerd.
+
+## Versie v1.0.1b4
+
+35 geisoleerde tests geslaagd. Extra dekking: multiplicatieve correctie, wegvallen van de correctie bij alle woningtypen of regio Nederland, het laatste gemeenschappelijke kwartaal, ontbrekende referentieindices, echte CBS-responsfragmenten voor alle drie reeksen, afgerond BerekenHet-voorbeeld, behoud van oude configuraties, coordinatorselectie van tabellen, sensorattributen en foutafhandeling. Bestaande cache-, naam- en icoontests blijven slagen. HA-grens is gestubd; geen live HA-installatietest.

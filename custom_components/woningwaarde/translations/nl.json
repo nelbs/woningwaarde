@@ -4,24 +4,26 @@
     "step": {
       "user": {
         "title": "Woningwaarde",
-        "description": "Kies een regionale reeks (alle woningtypen) of een landelijke reeks per woningtype. Combineren kan niet. Gebruik per woning een eigen ID, bijvoorbeeld thuis of vakantiehuis.",
+        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index.",
         "data": {
           "house_id": "Woning-ID (uniek en blijvend)",
           "name": "Naam",
-          "series": "CBS-reeks",
           "waarde": "Bekende waarde (EUR)",
-          "datum": "Datum bekende waarde"
+          "datum": "Datum bekende waarde",
+          "region": "Provincie of gemeente",
+          "woningtype": "Woningtype"
         }
       },
       "reconfigure": {
         "title": "Woningwaarde",
-        "description": "Kies een regionale reeks (alle woningtypen) of een landelijke reeks per woningtype. Combineren kan niet. Gebruik per woning een eigen ID, bijvoorbeeld thuis of vakantiehuis.",
+        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index.",
         "data": {
           "house_id": "Woning-ID (uniek en blijvend)",
           "name": "Naam",
-          "series": "CBS-reeks",
           "waarde": "Bekende waarde (EUR)",
-          "datum": "Datum bekende waarde"
+          "datum": "Datum bekende waarde",
+          "region": "Provincie of gemeente",
+          "woningtype": "Woningtype"
         }
       }
     },

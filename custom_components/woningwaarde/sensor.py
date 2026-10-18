@@ -3,7 +3,7 @@
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SERIES
+from .const import DOMAIN, HOUSE_TYPES, REGIONS
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -40,8 +40,8 @@ class WoningwaardeSensor(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         data = self.coordinator.data
         return {k: v for k, v in data.items() if k != "value"} | {
-            "series_name": SERIES[data["series"]],
+            "region_name": REGIONS[data["region"]],
+            "house_type_name": HOUSE_TYPES[data["woningtype"]],
             "reference_value": self.entry.data["waarde"],
             "reference_date": self.entry.data["datum"],
-            "method": "reference_value * latest_index / base_index",
         }

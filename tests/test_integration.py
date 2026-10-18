@@ -260,9 +260,11 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
     async def test_two_houses_same_name_different_ids(self):
         first = flow_module.WoningwaardeConfigFlow()
         second = flow_module.WoningwaardeConfigFlow()
-        a = await first.async_step_user({**DATA, "series": "NL01"})
+        a = await first.async_step_user(
+            {**DATA, "region": "NL01", "woningtype": "T001100"}
+        )
         b = await second.async_step_user(
-            {**DATA, "house_id": "vakantie", "series": "PV25"}
+            {**DATA, "house_id": "vakantie", "region": "PV25", "woningtype": "T001100"}
         )
         self.assertEqual(a["type"], "create_entry")
         self.assertEqual(b["type"], "create_entry")
@@ -273,7 +275,12 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         flow.configured = {"thuis"}
         with self.assertRaises(AbortFlow):
             await flow.async_step_user(
-                {**DATA, "house_id": " THUIS ", "series": "NL01"}
+                {
+                    **DATA,
+                    "house_id": " THUIS ",
+                    "region": "NL01",
+                    "woningtype": "T001100",
+                }
             )
 
     async def test_bad_input_shows_error(self):
@@ -294,7 +301,9 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         import voluptuous
 
         with self.assertRaises(voluptuous.Invalid):
-            flow_module.schema()({**DATA, "series": "imaginary"})
+            flow_module.schema()(
+                {**DATA, "region": "imaginary", "woningtype": "T001100"}
+            )
 
 
 # Exercise the sensor constructor against a minimal coordinator boundary.
@@ -341,6 +350,149 @@ class SensorNamingTests(unittest.TestCase):
         self.assertEqual(
             self.make_sensor("haviklaan 28")._attr_icon, "mdi:home-outline"
         )
+
+
+class CombinedTests(unittest.TestCase):
+    def series(self, growth, latest="2025KW01"):
+        return [row("2020KW01", 100), row(latest, 100 * growth)]
+
+    def test_multiplicative_correction(self):
+        result = calc.calculate_combined(
+            self.series(1.4), self.series(1.3), self.series(1.2), DATA
+        )
+        self.assertEqual(result["value"], round(250000 * 1.3 * 1.4 / 1.2, 2))
+
+    def test_all_types_equals_region(self):
+        result = calc.calculate_combined(
+            self.series(1.4), self.series(1.2), self.series(1.2), DATA
+        )
+        self.assertEqual(result["value"], 350000)
+
+    def test_national_region_equals_type(self):
+        result = calc.calculate_combined(
+            self.series(1.2), self.series(1.3), self.series(1.2), DATA
+        )
+        self.assertEqual(result["value"], 325000)
+
+    def test_uses_latest_common_quarter(self):
+        regional = self.series(1.4) + [row("2025KW02", 200)]
+        result = calc.calculate_combined(
+            regional, self.series(1.3), self.series(1.2), DATA
+        )
+        self.assertEqual(result["latest_period"], "2025KW01")
+        self.assertEqual(result["indices"]["region"]["latest"], 140)
+
+    def test_missing_base_in_one_series_is_error(self):
+        with self.assertRaises(ValueError):
+            calc.calculate_combined(
+                self.series(1.4), [row("2025KW01", 130)], self.series(1.2), DATA
+            )
+
+    def test_real_cbs_combination(self):
+        fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
+        result = calc.calculate_combined(
+            fixture["PV25"], fixture["ZW10300"], fixture["NL01"], DATA
+        )
+        growth = [
+            fixture[k][-1]["PrijsindexVerkoopprijzen_1"]
+            / fixture[k][0]["PrijsindexVerkoopprijzen_1"]
+            for k in ["PV25", "ZW10300", "NL01"]
+        ]
+        self.assertEqual(
+            result["value"], round(250000 * growth[1] * growth[0] / growth[2], 2)
+        )
+        self.assertEqual(result["latest_period"], "2026KW02")
+
+    def test_berekenhet_displayed_example(self):
+        # Rounded displayed component values from a single fictitious calculator run.
+        # This checks the inferred correction rule, not BerekenHet's date interpolation.
+        result = calc.calculate_combined(
+            self.series(435500 / 250000),
+            self.series(413200 / 250000),
+            self.series(408200 / 250000),
+            DATA,
+        )
+        self.assertEqual(round(result["value"], -2), 440800)
+
+    def test_legacy_selection_preserved(self):
+        const = sys.modules["woningwaarde.const"]
+        self.assertEqual(const.selections({"series": "PV25"}), ("PV25", "T001100"))
+        self.assertEqual(const.selections({"series": "ZW10300"}), ("NL01", "ZW10300"))
+        self.assertEqual(
+            const.selections(
+                {"series": "PV25", "region": "PV31", "woningtype": "ZW10300"}
+            ),
+            ("PV31", "ZW10300"),
+        )
+
+
+class FakeDataCoordinator:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+class FakeUpdateFailed(Exception):
+    pass
+
+
+coordinator_boundary.DataUpdateCoordinator = FakeDataCoordinator
+coordinator_boundary.UpdateFailed = FakeUpdateFailed
+coordinator_module = load("coordinator")
+
+
+class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
+    def make_coordinator(self, data, missing_type=False):
+        fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
+        calls = []
+
+        async def rows(table):
+            calls.append(table)
+            if table == "85792NED":
+                return fixture["PV25"] + fixture["NL01"]
+            return [] if missing_type else fixture["ZW10300"]
+
+        entry = types.SimpleNamespace(data={**DATA, **data})
+        return coordinator_module.WoningCoordinator(
+            None, entry, types.SimpleNamespace(rows=rows)
+        ), calls
+
+    async def test_combined_fetches_both_tables(self):
+        coordinator, calls = self.make_coordinator(
+            {"region": "PV25", "woningtype": "ZW10300"}
+        )
+        result = await coordinator._async_update_data()
+        self.assertEqual(calls, ["85792NED", "85791NED"])
+        self.assertEqual(result["region"], "PV25")
+        sensor = sensor_module.WoningwaardeSensor(
+            types.SimpleNamespace(data=result),
+            types.SimpleNamespace(entry_id="test", data=DATA),
+        )
+        self.assertEqual(
+            sensor.extra_state_attributes["house_type_name"], "twee onder een kap"
+        )
+        self.assertIn("national_growth", sensor.extra_state_attributes["method"])
+
+    async def test_legacy_region_fetches_one_table(self):
+        coordinator, calls = self.make_coordinator({"series": "PV25"})
+        result = await coordinator._async_update_data()
+        self.assertEqual(calls, ["85792NED"])
+        self.assertEqual(result["woningtype"], "T001100")
+
+    async def test_legacy_type_keeps_national_region(self):
+        coordinator, _ = self.make_coordinator({"series": "ZW10300"})
+        result = await coordinator._async_update_data()
+        self.assertEqual(result["region"], "NL01")
+        fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
+        self.assertEqual(
+            result["value"], calc.calculate(fixture["ZW10300"], DATA)["value"]
+        )
+
+    async def test_missing_series_reports_unavailable(self):
+        coordinator, _ = self.make_coordinator(
+            {"region": "PV25", "woningtype": "ZW10300"}, missing_type=True
+        )
+        with self.assertRaises(FakeUpdateFailed):
+            await coordinator._async_update_data()
 
 
 if __name__ == "__main__":

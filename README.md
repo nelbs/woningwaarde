@@ -7,24 +7,32 @@ Home Assistant-integratie voor een **geindexeerde woningwaarde** op basis van de
 1. Installeer als aangepaste HACS-repository (`nelbs/woningwaarde`, categorie Integratie), zodra deze versie daar gepubliceerd is. Voor deze lokale versie: kopieer `custom_components/woningwaarde` naar de map `config/custom_components/woningwaarde` van Home Assistant.
 2. Herstart Home Assistant.
 3. Ga naar **Instellingen > Apparaten & diensten > Integratie toevoegen > Woningwaarde**.
-4. Vul een blijvend woning-ID in (bijvoorbeeld `thuis`), een naam, CBS-reeks, bekende waarde in euro en de bijbehorende datum.
+4. Vul een blijvend woning-ID in (bijvoorbeeld `thuis`), een naam, regio, woningtype, bekende waarde in euro en de bijbehorende datum.
 5. Voeg voor iedere volgende woning opnieuw Woningwaarde toe, met een ander woning-ID. Gelijke namen/prijzen zijn toegestaan.
-6. Gebruik **Opnieuw configureren** in het integratiemenu om naam, reeks, prijs of datum aan te passen. Het woning-ID blijft gelijk, evenals de sensoridentiteit.
+6. Gebruik **Opnieuw configureren** in het integratiemenu om naam, regio, woningtype, prijs of datum aan te passen. Het woning-ID blijft gelijk, evenals de sensoridentiteit.
 
-De sensor is numeriek, met valuta EUR. Iedere woning heeft een eigen apparaat en sensor met unieke ID. Attributen tonen de gekozen reeks, CBS-tabel, referentiewaarde en -datum, beide indices en beide kwartalen. Bij een bronfout wordt de sensor niet beschikbaar; een oude waarde wordt niet als actuele waarde aangeboden.
+De sensor is numeriek, met valuta EUR. Iedere woning heeft een eigen apparaat en sensor met unieke ID. Attributen tonen de gekozen regio en het woningtype, CBS-tabellen, referentiewaarde en -datum, de gebruikte indices en groeifactoren en beide kwartalen. Bij een bronfout wordt de sensor niet beschikbaar; een oude waarde wordt niet als actuele waarde aangeboden.
 
 ## Berekening en dekking
 
-`waarde = bekende waarde * laatst gepubliceerde kwartaalindex / index van het referentiekwartaal`
+`waarde = bekende waarde * groei_woningtype * groei_regio / groei_Nederland`
 
-De datum wordt ingedeeld in het kalenderkwartaal waarin hij ligt. Er is geen daginterpolatie of extrapolatie. Het laatst gepubliceerde kwartaal staat in `latest_period`: dagelijkse controle betekent niet dat CBS dagelijks nieuwe cijfers publiceert. Een datum vanaf 1995 is toegestaan, maar het referentiekwartaal moet al gepubliceerd zijn; anders blijft de configuratie bestaan en meldt de integratie bij het laden de ontbrekende index. Kies in dat geval via opnieuw configureren een gepubliceerde referentiedatum.
+Iedere groeifactor is de index in het nieuwste gemeenschappelijke kwartaal gedeeld door de index in het referentiekwartaal. De landelijke woningtypeontwikkeling wordt dus gecorrigeerd voor de regionale ontwikkeling ten opzichte van Nederland. Dit is een **afgeleide gecombineerde schatting**, geen afzonderlijk door CBS gepubliceerde index voor het woningtype binnen die regio.
 
-Beschikbare keuzes:
+De datum wordt ingedeeld in het kalenderkwartaal waarin hij ligt. Er is geen daginterpolatie of extrapolatie. Het nieuwste gemeenschappelijke gepubliceerde kwartaal staat in `latest_period`. Alle drie de reeksen moeten een positieve index voor het referentiekwartaal bevatten. Ontbreekt die, dan meldt de integratie de ontbrekende gegevens en wordt de sensor niet beschikbaar.
 
-- Nederland, alle twaalf provincies en de vier grote gemeenten Amsterdam, Den Haag, Rotterdam en Utrecht: **alle woningtypen samen** (85792NED).
-- Landelijk per woningtype: eengezinswoning, tussenwoning, hoekwoning, twee onder een kap, vrijstaand of appartement (85791NED).
+Regio en woningtype zijn afzonderlijke keuzes:
 
-CBS biedt in deze tabellen geen kruising provincie x woningtype. De integratie combineert de twee indices daarom niet tot een verzonnen regionale woningtype-index. Voor andere gemeenten kies je de provincie. De uitkomst volgt een gemiddelde prijsontwikkeling; het is geen individuele taxatie of actuele WOZ-waarde.
+- Nederland, alle twaalf provincies en de vier grote gemeenten Amsterdam, Den Haag, Rotterdam en Utrecht (85792NED).
+- Alle woningtypen, eengezinswoning, tussenwoning, hoekwoning, twee onder een kap, vrijstaand of appartement (85791NED).
+
+Bij **Alle woningtypen** vervalt de woningtypecorrectie en volgt de uitkomst de regionale index. Bij regio **Nederland** volgt de uitkomst alleen de woningtype-index. Voor andere gemeenten kies je de provincie. De uitkomst is geen individuele taxatie of actuele WOZ-waarde.
+
+### Vergelijking met BerekenHet
+
+Een fictieve controleberekening bij BerekenHet (18 oktober 2026; Gelderland, twee onder een kap, EUR 250.000 op 01-01-2020, gevraagd 01-07-2026) toonde regionale, landelijke en woningtypewaarden van respectievelijk EUR 435.500, EUR 408.200 en EUR 413.200, met een gecombineerde uitkomst EUR 440.800. De verhouding `413200 * 435500 / 408200` rondt af op dezelfde uitkomst. Dit ondersteunt de gebruikte multiplicatieve correctie. Het is geen volledige reconstructie van de niet-gepubliceerde BerekenHet-formule.
+
+De precieze verwerking van datums door BerekenHet is niet volledig gereconstrueerd; de site beschrijft wel extrapolatie na de laatste publicatie. Deze integratie gebruikt uitsluitend gepubliceerde kwartaalindices, zonder daginterpolatie of extrapolatie. Exact gelijke bedragen voor iedere datum worden daarom niet beloofd.
 
 ## Frequentie en netwerkbelasting
 
@@ -39,7 +47,7 @@ Deze versie vervangt de oude YAML-sensor; automatische conversie is niet inbegre
 1. Bewaar je bestaande naam, `waarde`, `datum`, `region` en `type`.
 2. Verwijder de oude `- platform: woningwaarde` uit de `sensor:`-configuratie.
 3. Installeer de nieuwe bestanden, herstart en voeg iedere woning via de interface toe.
-4. Zet de oude datum `dd-mm-jjjj` om naar de datumkiezer. Kies expliciet een regionale reeks **of** landelijke woningtypereeks. Een oude combinatie van regio en type wordt niet stilzwijgend overgenomen.
+4. Zet de oude datum `dd-mm-jjjj` om naar de datumkiezer. Kies expliciet de regio en het woningtype. Bijvoorbeeld de oude regio Gelderland en type `2onder1kap` worden nu Gelderland en twee onder een kap.
 5. Pas dashboards/automatiseringen aan de nieuwe entity-ID aan. Historie wordt niet automatisch gekoppeld; bewaar de oude registratie totdat je de overstap hebt gecontroleerd.
 
 De oude implementatie verstuurde formulier-POSTs met een vast sessiekenmerk naar BerekenHet, had een interval van 300 seconden en startte bovendien vanuit de constructor een verzoek. De nieuwe implementatie gebruikt uitsluitend asynchrone CBS-GETs.
@@ -96,3 +104,11 @@ Werk via HACS bij naar `v1.0.1b2`, herstart Home Assistant en vernieuw de browse
 ## Prerelease v1.0.1b3: euroteken in het icoon
 
 Het huisje en de kleuren blijven behouden. Een groot euroteken en een klein oplopend grafiekje maken de woningwaarde herkenbaar. Werk via HACS bij naar `v1.0.1b3`, herstart Home Assistant en vernieuw de browserpagina.
+
+## Prerelease v1.0.1b4: regio en woningtype combineren
+
+Regio en woningtype kunnen nu tegelijk ingesteld worden via **Opnieuw configureren**. De gecombineerde schatting volgt de hierboven beschreven regionale correctie.
+
+Configuraties uit b1-b3 blijven werken zonder opnieuw toevoegen: een oude regionale keuze blijft dezelfde regio met **Alle woningtypen**; een oude woningtypekeuze blijft dat type met regio **Nederland**. Er wordt geen woningtype voor je geraden. Kies via Opnieuw configureren zelf de gewenste combinatie. De sensoridentiteit blijft behouden.
+
+De standaardberekening is nu de gecombineerde formule, met beide groeifactoren en hun landelijke correctie zichtbaar in de sensorattributen. De dagelijkse cachelimiet en het icoon blijven behouden. Werk via HACS bij naar `v1.0.1b4` en herstart Home Assistant.
