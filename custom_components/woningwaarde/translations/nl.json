@@ -1,0 +1,37 @@
+{
+  "title": "Woningwaarde",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Woningwaarde",
+        "description": "Kies een regionale reeks (alle woningtypen) of een landelijke reeks per woningtype. Combineren kan niet. Gebruik per woning een eigen ID, bijvoorbeeld thuis of vakantiehuis.",
+        "data": {
+          "house_id": "Woning-ID (uniek en blijvend)",
+          "name": "Naam",
+          "series": "CBS-reeks",
+          "waarde": "Bekende waarde (EUR)",
+          "datum": "Datum bekende waarde"
+        }
+      },
+      "reconfigure": {
+        "title": "Woningwaarde",
+        "description": "Kies een regionale reeks (alle woningtypen) of een landelijke reeks per woningtype. Combineren kan niet. Gebruik per woning een eigen ID, bijvoorbeeld thuis of vakantiehuis.",
+        "data": {
+          "house_id": "Woning-ID (uniek en blijvend)",
+          "name": "Naam",
+          "series": "CBS-reeks",
+          "waarde": "Bekende waarde (EUR)",
+          "datum": "Datum bekende waarde"
+        }
+      }
+    },
+    "error": {
+      "invalid_input": "Gebruik een positieve waarde en een datum vanaf 1995 tot vandaag.",
+      "identifier_changed": "Behoud het bestaande woning-ID."
+    },
+    "abort": {
+      "already_configured": "Deze woning is al toegevoegd.",
+      "reconfigure_successful": "Woning bijgewerkt."
+    }
+  }
+}

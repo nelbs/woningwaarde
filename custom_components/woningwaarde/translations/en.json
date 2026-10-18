@@ -1,0 +1,37 @@
+{
+  "title": "Woningwaarde",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Woningwaarde",
+        "description": "Choose a regional series (all house types) or a national house-type series. These cannot be combined. Use a distinct ID for each house.",
+        "data": {
+          "house_id": "House ID (unique and permanent)",
+          "name": "Name",
+          "series": "CBS series",
+          "waarde": "Known value (EUR)",
+          "datum": "Reference date"
+        }
+      },
+      "reconfigure": {
+        "title": "Woningwaarde",
+        "description": "Choose a regional series (all house types) or a national house-type series. These cannot be combined. Use a distinct ID for each house.",
+        "data": {
+          "house_id": "House ID (unique and permanent)",
+          "name": "Name",
+          "series": "CBS series",
+          "waarde": "Known value (EUR)",
+          "datum": "Reference date"
+        }
+      }
+    },
+    "error": {
+      "invalid_input": "Use a positive value and a date from 1995 through today.",
+      "identifier_changed": "Keep the existing house ID."
+    },
+    "abort": {
+      "already_configured": "This house is already configured.",
+      "reconfigure_successful": "House updated."
+    }
+  }
+}

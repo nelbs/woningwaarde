@@ -1,11 +1,15 @@
 {
   "domain": "woningwaarde",
   "name": "Woningwaarde",
-  "version": "0.1",
-  "documentation": "https://www.example.com",
-  "requirements": [
-    "bs4==0.0.1"
-  ],
+  "version": "1.0.1b1",
+  "config_flow": true,
+  "documentation": "https://github.com/nelbs/woningwaarde",
+  "issue_tracker": "https://github.com/nelbs/woningwaarde/issues",
+  "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@nelbs"
+  ],
+  "iot_class": "cloud_polling",
+  "integration_type": "service"
 }
