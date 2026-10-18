@@ -92,3 +92,7 @@ De oude YAML-configuratie werkt niet meer met deze herbouw: volg de overstapinst
 Een eigen huisicoon met oplopende waardebalken staat nu in `custom_components/woningwaarde/brand/`, in 256 en 512 pixels en met een variant voor donkere thema's. Home Assistant gebruikt deze lokale afbeeldingen voor de integratie. Het sensoricoon blijft `mdi:home-outline`.
 
 Werk via HACS bij naar `v1.0.1b2`, herstart Home Assistant en vernieuw de browserpagina als het oude icoon nog uit de cache wordt getoond.
+
+## Prerelease v1.0.1b3: euroteken in het icoon
+
+Het huisje en de kleuren blijven behouden. Een groot euroteken en een klein oplopend grafiekje maken de woningwaarde herkenbaar. Werk via HACS bij naar `v1.0.1b3`, herstart Home Assistant en vernieuw de browserpagina.
