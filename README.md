@@ -86,3 +86,9 @@ Deze testversie staat op de branch `feature/ui-multiple-homes` en wordt aangebod
 Open Woningwaarde in HACS en kies via het menu **Opnieuw downloaden / Redownload** de versie `v1.0.1b1`. Schakel zo nodig de HACS-optie voor prereleases/betaversies in. Herstart Home Assistant na de update. De keuze voor prereleases wordt door HACS aangeboden; de precieze plaats verschilt per HACS-versie.
 
 De oude YAML-configuratie werkt niet meer met deze herbouw: volg de overstapinstructies hierboven. Bewaar een backup voor je bijwerkt.
+
+## Prerelease v1.0.1b2: integratie-icoon
+
+Een eigen huisicoon met oplopende waardebalken staat nu in `custom_components/woningwaarde/brand/`, in 256 en 512 pixels en met een variant voor donkere thema's. Home Assistant gebruikt deze lokale afbeeldingen voor de integratie. Het sensoricoon blijft `mdi:home-outline`.
+
+Werk via HACS bij naar `v1.0.1b2`, herstart Home Assistant en vernieuw de browserpagina als het oude icoon nog uit de cache wordt getoond.
