@@ -30,3 +30,7 @@ Versie 1.0.1: drie extra regressietests voor de ingevoerde woningnaam (inclusief
 ## Versie v1.0.1b4
 
 35 geisoleerde tests geslaagd. Extra dekking: multiplicatieve correctie, wegvallen van de correctie bij alle woningtypen of regio Nederland, het laatste gemeenschappelijke kwartaal, ontbrekende referentieindices, echte CBS-responsfragmenten voor alle drie reeksen, afgerond BerekenHet-voorbeeld, behoud van oude configuraties, coordinatorselectie van tabellen, sensorattributen en foutafhandeling. Bestaande cache-, naam- en icoontests blijven slagen. HA-grens is gestubd; geen live HA-installatietest.
+
+## Versie v1.0.1b5 - 22 oktober 2026
+
+51 geisoleerde tests geslaagd. Zie docs/analysis-2026-10-22.md voor de bronvergelijking en de resterende, niet weggefitte afwijking ten opzichte van BerekenHet. Nieuwe tests dekken de dagconventie, lineaire interpolatie/extrapolatie, 21/92 dagen in het gebruikersvoorbeeld, 93 historische grafiekpunten, datumgrenzen, ontbrekende kwartalen, schrikkeldagen en de expliciete methodekeuze. De bestaande dagelijkse cache en standaard voor bestaande configuraties blijven behouden. HA-grens is gestubd; geen live HA-installatietest.

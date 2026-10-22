@@ -5,7 +5,7 @@ from homeassistant import config_entries
 from homeassistant.helpers import selector
 
 from .calculate import validate
-from .const import DOMAIN, HOUSE_TYPES, REGIONS, selections
+from .const import CALCULATION_MODES, DOMAIN, HOUSE_TYPES, REGIONS, selections
 
 
 def schema(defaults=None):
@@ -17,6 +17,12 @@ def schema(defaults=None):
             vol.Required("name", default=defaults.get("name", "Woning")): str,
             vol.Required("region", default=region): vol.In(REGIONS),
             vol.Required("woningtype", default=woningtype): vol.In(HOUSE_TYPES),
+            vol.Required(
+                "calculation_mode",
+                default=defaults.get(
+                    "calculation_mode", "quarter" if defaults else "daily_forecast"
+                ),
+            ): vol.In(CALCULATION_MODES),
             vol.Required("waarde", default=defaults.get("waarde", 250000)): vol.Coerce(
                 float
             ),

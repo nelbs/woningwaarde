@@ -57,3 +57,9 @@ def selections(data):
         data.get("region", "NL01" if old.startswith("ZW") else old),
         data.get("woningtype", old if old.startswith("ZW") else "T001100"),
     )
+
+
+CALCULATION_MODES = {
+    "quarter": "Kwartaal zonder prognose (oude methode)",
+    "daily_forecast": "Datumberekening met prognose",
+}

@@ -1,0 +1,584 @@
+{
+  "checked_on": "2026-10-22",
+  "reference_period": "2016KW02",
+  "reference_value": 309000,
+  "description": "Archived CBS PBK2015 values compared with displayed historical BerekenHet graph points; numerical data only.",
+  "series": {
+    "PV31": {
+      "source_table": "83913NED",
+      "reference_index": 103.3,
+      "points": [
+        {
+          "date": "2016-07-01",
+          "period": "2016KW02",
+          "archived_index": 103.3,
+          "website_value": 309000
+        },
+        {
+          "date": "2016-10-01",
+          "period": "2016KW03",
+          "archived_index": 105.2,
+          "website_value": 314700
+        },
+        {
+          "date": "2017-01-01",
+          "period": "2016KW04",
+          "archived_index": 106,
+          "website_value": 317100
+        },
+        {
+          "date": "2017-04-01",
+          "period": "2017KW01",
+          "archived_index": 107,
+          "website_value": 320100
+        },
+        {
+          "date": "2017-07-01",
+          "period": "2017KW02",
+          "archived_index": 108.2,
+          "website_value": 323700
+        },
+        {
+          "date": "2017-10-01",
+          "period": "2017KW03",
+          "archived_index": 109.8,
+          "website_value": 328400
+        },
+        {
+          "date": "2018-01-01",
+          "period": "2017KW04",
+          "archived_index": 111.4,
+          "website_value": 333200
+        },
+        {
+          "date": "2018-04-01",
+          "period": "2018KW01",
+          "archived_index": 114.4,
+          "website_value": 342200
+        },
+        {
+          "date": "2018-07-01",
+          "period": "2018KW02",
+          "archived_index": 116,
+          "website_value": 347000
+        },
+        {
+          "date": "2018-10-01",
+          "period": "2018KW03",
+          "archived_index": 119.1,
+          "website_value": 356300
+        },
+        {
+          "date": "2019-01-01",
+          "period": "2018KW04",
+          "archived_index": 120.6,
+          "website_value": 360700
+        },
+        {
+          "date": "2019-04-01",
+          "period": "2019KW01",
+          "archived_index": 122.9,
+          "website_value": 367600
+        },
+        {
+          "date": "2019-07-01",
+          "period": "2019KW02",
+          "archived_index": 124.7,
+          "website_value": 373000
+        },
+        {
+          "date": "2019-10-01",
+          "period": "2019KW03",
+          "archived_index": 126.1,
+          "website_value": 377200
+        },
+        {
+          "date": "2020-01-01",
+          "period": "2019KW04",
+          "archived_index": 128.7,
+          "website_value": 385000
+        },
+        {
+          "date": "2020-04-01",
+          "period": "2020KW01",
+          "archived_index": 132.1,
+          "website_value": 395100
+        },
+        {
+          "date": "2020-07-01",
+          "period": "2020KW02",
+          "archived_index": 133.9,
+          "website_value": 400500
+        },
+        {
+          "date": "2020-10-01",
+          "period": "2020KW03",
+          "archived_index": 136.9,
+          "website_value": 409500
+        },
+        {
+          "date": "2021-01-01",
+          "period": "2020KW04",
+          "archived_index": 139.3,
+          "website_value": 416700
+        },
+        {
+          "date": "2021-04-01",
+          "period": "2021KW01",
+          "archived_index": 145,
+          "website_value": 433700
+        },
+        {
+          "date": "2021-07-01",
+          "period": "2021KW02",
+          "archived_index": 149.5,
+          "website_value": 447200
+        },
+        {
+          "date": "2021-10-01",
+          "period": "2021KW03",
+          "archived_index": 157.9,
+          "website_value": 472300
+        },
+        {
+          "date": "2022-01-01",
+          "period": "2021KW04",
+          "archived_index": 163,
+          "website_value": 487600
+        },
+        {
+          "date": "2022-04-01",
+          "period": "2022KW01",
+          "archived_index": 169.8,
+          "website_value": 507900
+        },
+        {
+          "date": "2022-07-01",
+          "period": "2022KW02",
+          "archived_index": 173.7,
+          "website_value": 519600
+        },
+        {
+          "date": "2022-10-01",
+          "period": "2022KW03",
+          "archived_index": 173.1,
+          "website_value": 517800
+        },
+        {
+          "date": "2023-01-01",
+          "period": "2022KW04",
+          "archived_index": 170.9,
+          "website_value": 511200
+        },
+        {
+          "date": "2023-04-01",
+          "period": "2023KW01",
+          "archived_index": 169.1,
+          "website_value": 505800
+        },
+        {
+          "date": "2023-07-01",
+          "period": "2023KW02",
+          "archived_index": 168.3,
+          "website_value": 503400
+        },
+        {
+          "date": "2023-10-01",
+          "period": "2023KW03",
+          "archived_index": 170.3,
+          "website_value": 509400
+        },
+        {
+          "date": "2024-01-01",
+          "period": "2023KW04",
+          "archived_index": 174.3,
+          "website_value": 521400
+        }
+      ]
+    },
+    "NL01": {
+      "source_table": "83913NED",
+      "reference_index": 103.7,
+      "points": [
+        {
+          "date": "2016-07-01",
+          "period": "2016KW02",
+          "archived_index": 103.7,
+          "website_value": 309000
+        },
+        {
+          "date": "2016-10-01",
+          "period": "2016KW03",
+          "archived_index": 106.3,
+          "website_value": 316700
+        },
+        {
+          "date": "2017-01-01",
+          "period": "2016KW04",
+          "archived_index": 107.5,
+          "website_value": 320300
+        },
+        {
+          "date": "2017-04-01",
+          "period": "2017KW01",
+          "archived_index": 109.6,
+          "website_value": 326600
+        },
+        {
+          "date": "2017-07-01",
+          "period": "2017KW02",
+          "archived_index": 111.7,
+          "website_value": 332800
+        },
+        {
+          "date": "2017-10-01",
+          "period": "2017KW03",
+          "archived_index": 114.4,
+          "website_value": 340900
+        },
+        {
+          "date": "2018-01-01",
+          "period": "2017KW04",
+          "archived_index": 116.3,
+          "website_value": 346500
+        },
+        {
+          "date": "2018-04-01",
+          "period": "2018KW01",
+          "archived_index": 119.4,
+          "website_value": 355800
+        },
+        {
+          "date": "2018-07-01",
+          "period": "2018KW02",
+          "archived_index": 121.6,
+          "website_value": 362300
+        },
+        {
+          "date": "2018-10-01",
+          "period": "2018KW03",
+          "archived_index": 124.9,
+          "website_value": 372200
+        },
+        {
+          "date": "2019-01-01",
+          "period": "2018KW04",
+          "archived_index": 126.7,
+          "website_value": 377500
+        },
+        {
+          "date": "2019-04-01",
+          "period": "2019KW01",
+          "archived_index": 128.9,
+          "website_value": 384100
+        },
+        {
+          "date": "2019-07-01",
+          "period": "2019KW02",
+          "archived_index": 130.4,
+          "website_value": 388600
+        },
+        {
+          "date": "2019-10-01",
+          "period": "2019KW03",
+          "archived_index": 132.7,
+          "website_value": 395400
+        },
+        {
+          "date": "2020-01-01",
+          "period": "2019KW04",
+          "archived_index": 134.6,
+          "website_value": 401100
+        },
+        {
+          "date": "2020-04-01",
+          "period": "2020KW01",
+          "archived_index": 137.5,
+          "website_value": 409700
+        },
+        {
+          "date": "2020-07-01",
+          "period": "2020KW02",
+          "archived_index": 140.2,
+          "website_value": 417800
+        },
+        {
+          "date": "2020-10-01",
+          "period": "2020KW03",
+          "archived_index": 143.5,
+          "website_value": 427600
+        },
+        {
+          "date": "2021-01-01",
+          "period": "2020KW04",
+          "archived_index": 146.4,
+          "website_value": 436200
+        },
+        {
+          "date": "2021-04-01",
+          "period": "2021KW01",
+          "archived_index": 151.7,
+          "website_value": 452000
+        },
+        {
+          "date": "2021-07-01",
+          "period": "2021KW02",
+          "archived_index": 158.4,
+          "website_value": 472000
+        },
+        {
+          "date": "2021-10-01",
+          "period": "2021KW03",
+          "archived_index": 168.6,
+          "website_value": 502400
+        },
+        {
+          "date": "2022-01-01",
+          "period": "2021KW04",
+          "archived_index": 175.1,
+          "website_value": 521800
+        },
+        {
+          "date": "2022-04-01",
+          "period": "2022KW01",
+          "archived_index": 182.4,
+          "website_value": 543500
+        },
+        {
+          "date": "2022-07-01",
+          "period": "2022KW02",
+          "archived_index": 187.5,
+          "website_value": 558700
+        },
+        {
+          "date": "2022-10-01",
+          "period": "2022KW03",
+          "archived_index": 188.6,
+          "website_value": 562000
+        },
+        {
+          "date": "2023-01-01",
+          "period": "2022KW04",
+          "archived_index": 184.1,
+          "website_value": 548600
+        },
+        {
+          "date": "2023-04-01",
+          "period": "2023KW01",
+          "archived_index": 181.2,
+          "website_value": 539900
+        },
+        {
+          "date": "2023-07-01",
+          "period": "2023KW02",
+          "archived_index": 177.8,
+          "website_value": 529800
+        },
+        {
+          "date": "2023-10-01",
+          "period": "2023KW03",
+          "archived_index": 180,
+          "website_value": 536400
+        },
+        {
+          "date": "2024-01-01",
+          "period": "2023KW04",
+          "archived_index": 183,
+          "website_value": 545300
+        }
+      ]
+    },
+    "ZW10300": {
+      "source_table": "83910NED",
+      "reference_index": 103.7,
+      "points": [
+        {
+          "date": "2016-07-01",
+          "period": "2016KW02",
+          "archived_index": 103.7,
+          "website_value": 309000
+        },
+        {
+          "date": "2016-10-01",
+          "period": "2016KW03",
+          "archived_index": 106.1,
+          "website_value": 316200
+        },
+        {
+          "date": "2017-01-01",
+          "period": "2016KW04",
+          "archived_index": 107.4,
+          "website_value": 320000
+        },
+        {
+          "date": "2017-04-01",
+          "period": "2017KW01",
+          "archived_index": 109.2,
+          "website_value": 325400
+        },
+        {
+          "date": "2017-07-01",
+          "period": "2017KW02",
+          "archived_index": 110.7,
+          "website_value": 329900
+        },
+        {
+          "date": "2017-10-01",
+          "period": "2017KW03",
+          "archived_index": 113.2,
+          "website_value": 337300
+        },
+        {
+          "date": "2018-01-01",
+          "period": "2017KW04",
+          "archived_index": 115.2,
+          "website_value": 343300
+        },
+        {
+          "date": "2018-04-01",
+          "period": "2018KW01",
+          "archived_index": 117.8,
+          "website_value": 351000
+        },
+        {
+          "date": "2018-07-01",
+          "period": "2018KW02",
+          "archived_index": 119.3,
+          "website_value": 355500
+        },
+        {
+          "date": "2018-10-01",
+          "period": "2018KW03",
+          "archived_index": 122.3,
+          "website_value": 364400
+        },
+        {
+          "date": "2019-01-01",
+          "period": "2018KW04",
+          "archived_index": 123.9,
+          "website_value": 369200
+        },
+        {
+          "date": "2019-04-01",
+          "period": "2019KW01",
+          "archived_index": 125.7,
+          "website_value": 374600
+        },
+        {
+          "date": "2019-07-01",
+          "period": "2019KW02",
+          "archived_index": 126.8,
+          "website_value": 377800
+        },
+        {
+          "date": "2019-10-01",
+          "period": "2019KW03",
+          "archived_index": 129.2,
+          "website_value": 385000
+        },
+        {
+          "date": "2020-01-01",
+          "period": "2019KW04",
+          "archived_index": 130.7,
+          "website_value": 389500
+        },
+        {
+          "date": "2020-04-01",
+          "period": "2020KW01",
+          "archived_index": 133.2,
+          "website_value": 396900
+        },
+        {
+          "date": "2020-07-01",
+          "period": "2020KW02",
+          "archived_index": 136,
+          "website_value": 405200
+        },
+        {
+          "date": "2020-10-01",
+          "period": "2020KW03",
+          "archived_index": 139.3,
+          "website_value": 415100
+        },
+        {
+          "date": "2021-01-01",
+          "period": "2020KW04",
+          "archived_index": 142.2,
+          "website_value": 423700
+        },
+        {
+          "date": "2021-04-01",
+          "period": "2021KW01",
+          "archived_index": 148.4,
+          "website_value": 442200
+        },
+        {
+          "date": "2021-07-01",
+          "period": "2021KW02",
+          "archived_index": 154.4,
+          "website_value": 460100
+        },
+        {
+          "date": "2021-10-01",
+          "period": "2021KW03",
+          "archived_index": 164.2,
+          "website_value": 489300
+        },
+        {
+          "date": "2022-01-01",
+          "period": "2021KW04",
+          "archived_index": 172,
+          "website_value": 512500
+        },
+        {
+          "date": "2022-04-01",
+          "period": "2022KW01",
+          "archived_index": 178,
+          "website_value": 530400
+        },
+        {
+          "date": "2022-07-01",
+          "period": "2022KW02",
+          "archived_index": 181.9,
+          "website_value": 542000
+        },
+        {
+          "date": "2022-10-01",
+          "period": "2022KW03",
+          "archived_index": 183.9,
+          "website_value": 548000
+        },
+        {
+          "date": "2023-01-01",
+          "period": "2022KW04",
+          "archived_index": 179.4,
+          "website_value": 534600
+        },
+        {
+          "date": "2023-04-01",
+          "period": "2023KW01",
+          "archived_index": 176.9,
+          "website_value": 527100
+        },
+        {
+          "date": "2023-07-01",
+          "period": "2023KW02",
+          "archived_index": 173.1,
+          "website_value": 515800
+        },
+        {
+          "date": "2023-10-01",
+          "period": "2023KW03",
+          "archived_index": 174.9,
+          "website_value": 521200
+        },
+        {
+          "date": "2024-01-01",
+          "period": "2023KW04",
+          "archived_index": 178.1,
+          "website_value": 530700
+        }
+      ]
+    }
+  }
+}

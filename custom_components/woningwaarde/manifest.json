@@ -1,7 +1,7 @@
 {
   "domain": "woningwaarde",
   "name": "Woningwaarde",
-  "version": "1.0.1b4",
+  "version": "1.0.1b5",
   "config_flow": true,
   "documentation": "https://github.com/nelbs/woningwaarde",
   "issue_tracker": "https://github.com/nelbs/woningwaarde/issues",

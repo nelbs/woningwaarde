@@ -1,0 +1,117 @@
+{
+  "retrieved": "2026-10-22",
+  "source_tables": [
+    "85792NED",
+    "85791NED"
+  ],
+  "input": {
+    "name": "Testwoning",
+    "house_id": "test",
+    "waarde": 309000,
+    "datum": "2016-07-01"
+  },
+  "target_date": "2026-10-22",
+  "website": {
+    "published_date": "2026-10-01",
+    "published_value": 621200,
+    "forecast_value": 622900
+  },
+  "series": {
+    "PV31": [
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2016KW01",
+        "PrijsindexVerkoopprijzen_1": 74.9
+      },
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2016KW02",
+        "PrijsindexVerkoopprijzen_1": 76.1
+      },
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2016KW03",
+        "PrijsindexVerkoopprijzen_1": 77.5
+      },
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2016KW04",
+        "PrijsindexVerkoopprijzen_1": 78.1
+      },
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2026KW02",
+        "PrijsindexVerkoopprijzen_1": 154
+      },
+      {
+        "RegioS": "PV31  ",
+        "Perioden": "2026KW03",
+        "PrijsindexVerkoopprijzen_1": 155.6
+      }
+    ],
+    "NL01": [
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2016KW01",
+        "PrijsindexVerkoopprijzen_1": 71.5
+      },
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2016KW02",
+        "PrijsindexVerkoopprijzen_1": 72.4
+      },
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2016KW03",
+        "PrijsindexVerkoopprijzen_1": 74.3
+      },
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2016KW04",
+        "PrijsindexVerkoopprijzen_1": 75.2
+      },
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2026KW02",
+        "PrijsindexVerkoopprijzen_1": 154.9
+      },
+      {
+        "RegioS": "NL01  ",
+        "Perioden": "2026KW03",
+        "PrijsindexVerkoopprijzen_1": 156.4
+      }
+    ],
+    "ZW10300": [
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2016KW01",
+        "PrijsindexVerkoopprijzen_1": 74.6
+      },
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2016KW02",
+        "PrijsindexVerkoopprijzen_1": 75.3
+      },
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2016KW03",
+        "PrijsindexVerkoopprijzen_1": 77
+      },
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2016KW04",
+        "PrijsindexVerkoopprijzen_1": 78.1
+      },
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2026KW02",
+        "PrijsindexVerkoopprijzen_1": 157
+      },
+      {
+        "TypeWoning": "ZW10300",
+        "Perioden": "2026KW03",
+        "PrijsindexVerkoopprijzen_1": 158.7
+      }
+    ]
+  }
+}

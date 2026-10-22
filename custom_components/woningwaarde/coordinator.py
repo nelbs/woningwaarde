@@ -6,7 +6,7 @@ from datetime import timedelta
 import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .calculate import calculate_combined
+from .calculate import calculate_combined, calculate_dated
 from .const import DOMAIN, REGION_TABLE, TYPE_TABLE, selections
 
 
@@ -34,7 +34,15 @@ class WoningCoordinator(DataUpdateCoordinator):
             else:
                 type_rows = await self.client.rows(TYPE_TABLE)
                 typed = [r for r in type_rows if r["TypeWoning"].strip() == woningtype]
-            result = calculate_combined(regional, typed, national, data)
+            mode = data.get("calculation_mode", "quarter")
+            if mode == "daily_forecast":
+                result = calculate_dated(regional, typed, national, data)
+            elif mode == "quarter":
+                result = calculate_combined(regional, typed, national, data)
+                result["calculation_mode"] = "quarter"
+                result["is_forecast"] = False
+            else:
+                raise ValueError("Unknown calculation mode")
         except (
             aiohttp.ClientError,
             TimeoutError,

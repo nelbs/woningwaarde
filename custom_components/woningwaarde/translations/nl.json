@@ -4,26 +4,28 @@
     "step": {
       "user": {
         "title": "Woningwaarde",
-        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index.",
+        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index. De datumberekening plaatst een kwartaalindex op de eerste dag na dat kwartaal en interpoleert lineair. Na de laatste publicatie wordt de laatste kwartaaltrend maximaal vier maanden doorgetrokken. Dit is een prognose. De oude kwartaalmethode blijft apart beschikbaar.",
         "data": {
           "house_id": "Woning-ID (uniek en blijvend)",
           "name": "Naam",
           "waarde": "Bekende waarde (EUR)",
           "datum": "Datum bekende waarde",
           "region": "Provincie of gemeente",
-          "woningtype": "Woningtype"
+          "woningtype": "Woningtype",
+          "calculation_mode": "Berekeningsmethode"
         }
       },
       "reconfigure": {
         "title": "Woningwaarde",
-        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index.",
+        "description": "Kies regio en woningtype. De landelijke woningtype-index wordt gecorrigeerd met de regionale prijsontwikkeling ten opzichte van Nederland. Dit is een gecombineerde schatting, geen afzonderlijke regionale woningtype-index. De datumberekening plaatst een kwartaalindex op de eerste dag na dat kwartaal en interpoleert lineair. Na de laatste publicatie wordt de laatste kwartaaltrend maximaal vier maanden doorgetrokken. Dit is een prognose. De oude kwartaalmethode blijft apart beschikbaar.",
         "data": {
           "house_id": "Woning-ID (uniek en blijvend)",
           "name": "Naam",
           "waarde": "Bekende waarde (EUR)",
           "datum": "Datum bekende waarde",
           "region": "Provincie of gemeente",
-          "woningtype": "Woningtype"
+          "woningtype": "Woningtype",
+          "calculation_mode": "Berekeningsmethode"
         }
       }
     },

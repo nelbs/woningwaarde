@@ -495,5 +495,215 @@ class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
             await coordinator._async_update_data()
 
 
+class DatedCalculationTests(unittest.TestCase):
+    def fixture(self):
+        return json.loads((ROOT / "tests/fixtures/limburg_20261022.json").read_text())
+
+    def run_example(self, target):
+        from datetime import date
+
+        f = self.fixture()
+        v = f["series"]
+        return calc.calculate_dated(
+            v["PV31"], v["ZW10300"], v["NL01"], f["input"], date.fromisoformat(target)
+        )
+
+    def test_website_history_matches_archived_series_with_normal_rounding(self):
+        evidence = json.loads(
+            (ROOT / "tests/fixtures/berekenhet_archived_comparison.json").read_text()
+        )
+        for series in evidence["series"].values():
+            self.assertEqual(len(series["points"]), 31)
+            for point in series["points"]:
+                price = (
+                    evidence["reference_value"]
+                    * point["archived_index"]
+                    / series["reference_index"]
+                )
+                self.assertEqual(round(price, -2), point["website_value"])
+
+    def test_archived_and_current_price_ratios_differ(self):
+        # Rebasing alone would preserve this ratio. Here the revised history differs.
+        evidence = json.loads(
+            (ROOT / "tests/fixtures/berekenhet_archived_comparison.json").read_text()
+        )
+        national = evidence["series"]["NL01"]
+        old_q3 = next(
+            p["archived_index"] for p in national["points"] if p["period"] == "2016KW03"
+        )
+        self.assertNotAlmostEqual(
+            old_q3 / national["reference_index"], 74.3 / 72.4, places=4
+        )
+
+    def test_user_example_with_current_source(self):
+        result = self.run_example("2026-10-22")
+        # Independently written from actual source indices and 21/92 elapsed days.
+        region = (155.6 + (155.6 - 154.0) * 21 / 92) / 76.1
+        typed = (158.7 + (158.7 - 157.0) * 21 / 92) / 75.3
+        national = (156.4 + (156.4 - 154.9) * 21 / 92) / 72.4
+        self.assertEqual(result["value"], round(309000 * typed * region / national, 2))
+        self.assertEqual(result["value"], 618011.05)
+        self.assertEqual(result["indexed_value"], 616406.46)
+        self.assertEqual(result["forecast_days"], 21)
+        self.assertTrue(result["is_forecast"])
+        self.assertEqual(result["published_date"], "2026-10-01")
+        # Do not assert equality with the website's different historical source.
+        self.assertNotEqual(
+            round(result["value"], -2), self.fixture()["website"]["forecast_value"]
+        )
+
+    def test_first_day_of_quarter_uses_previous_quarter(self):
+        result = self.run_example("2026-10-01")
+        self.assertEqual(result["indices"]["region"]["reference_date"], 76.1)
+        self.assertEqual(result["value"], 616406.46)
+        self.assertFalse(result["is_forecast"])
+
+    def test_same_reference_and_target_date_returns_known_price(self):
+        result = self.run_example("2016-07-01")
+        self.assertEqual(result["value"], 309000)
+        self.assertFalse(result["is_forecast"])
+
+    def test_old_quarter_mode_remains_reproducible(self):
+        f = self.fixture()
+        v = f["series"]
+        result = calc.calculate_combined(v["PV31"], v["ZW10300"], v["NL01"], f["input"])
+        self.assertEqual(result["value"], 607441.75)
+
+    def test_midquarter_reference_interpolates_actual_calendar_days(self):
+        from datetime import date
+
+        f = self.fixture()
+        v = f["series"]
+        result = calc.calculate_dated(
+            v["PV31"],
+            v["ZW10300"],
+            v["NL01"],
+            {**f["input"], "datum": "2016-08-01"},
+            date(2026, 10, 1),
+        )
+        self.assertAlmostEqual(
+            result["indices"]["region"]["reference_date"],
+            76.1 + (77.5 - 76.1) * 31 / 92,
+        )
+
+    def test_before_first_boundary_is_error(self):
+        from datetime import date
+
+        with self.assertRaises(ValueError):
+            calc._dated_index(
+                {date(2025, 4, 1): 100, date(2025, 7, 1): 105}, date(2025, 1, 1)
+            )
+
+    def test_missing_quarter_does_not_bridge_gap(self):
+        from datetime import date
+
+        with self.assertRaises(ValueError):
+            calc._dated_index(
+                {date(2025, 4, 1): 100, date(2025, 10, 1): 105}, date(2025, 7, 1)
+            )
+
+    def test_forecast_requires_two_consecutive_quarters(self):
+        from datetime import date
+
+        with self.assertRaises(ValueError):
+            calc._dated_index({date(2025, 10, 1): 105}, date(2025, 10, 22))
+        with self.assertRaises(ValueError):
+            calc._dated_index(
+                {date(2025, 4, 1): 100, date(2025, 10, 1): 105}, date(2025, 10, 22)
+            )
+
+    def test_four_calendar_month_limit(self):
+        from datetime import date
+
+        points = {date(2025, 7, 1): 100, date(2025, 10, 1): 101}
+        self.assertGreater(calc._dated_index(points, date(2026, 2, 1)), 101)
+        with self.assertRaises(ValueError):
+            calc._dated_index(points, date(2026, 2, 2))
+
+    def test_falling_index_and_leap_year_interpolation(self):
+        from datetime import date
+
+        points = {date(2024, 1, 1): 100, date(2024, 4, 1): 91}
+        self.assertAlmostEqual(
+            calc._dated_index(points, date(2024, 3, 1)), 100 - 9 * 60 / 91
+        )
+        self.assertAlmostEqual(
+            calc._dated_index(points, date(2024, 4, 11)), 91 - 9 * 10 / 91
+        )
+
+    def test_reference_after_last_publication_is_labelled(self):
+        from datetime import date
+
+        f = self.fixture()
+        v = f["series"]
+        result = calc.calculate_dated(
+            v["PV31"],
+            v["ZW10300"],
+            v["NL01"],
+            {**f["input"], "datum": "2026-10-10"},
+            date(2026, 10, 22),
+        )
+        self.assertTrue(result["reference_is_forecast"])
+        self.assertGreater(result["value"], 309000)
+
+    def test_default_keeps_existing_entries_explicit(self):
+        def default_mode(defaults):
+            return next(
+                key.default()
+                for key in flow_module.schema(defaults).schema
+                if key.schema == "calculation_mode"
+            )
+
+        self.assertEqual(default_mode(DATA), "quarter")
+        self.assertEqual(default_mode({}), "daily_forecast")
+        self.assertEqual(
+            default_mode({**DATA, "calculation_mode": "daily_forecast"}),
+            "daily_forecast",
+        )
+
+    def test_future_valuation_before_reference_rejected(self):
+        with self.assertRaises(ValueError):
+            self.run_example("2016-06-30")
+
+
+class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
+    async def test_explicit_mode_and_preserved_daily_cache(self):
+        from datetime import date
+
+        f = json.loads((ROOT / "tests/fixtures/limburg_20261022.json").read_text())
+        calls = []
+
+        async def rows(table):
+            calls.append(table)
+            if table == "85792NED":
+                return f["series"]["PV31"] + f["series"]["NL01"]
+            return f["series"]["ZW10300"]
+
+        entry = types.SimpleNamespace(
+            data={
+                **f["input"],
+                "region": "PV31",
+                "woningtype": "ZW10300",
+                "calculation_mode": "daily_forecast",
+            }
+        )
+        coordinator = coordinator_module.WoningCoordinator(
+            None, entry, types.SimpleNamespace(rows=rows)
+        )
+        # Freeze only the default target date; keep the implementation under test.
+        original = calc.calculate_dated
+
+        def calculate_at_fixed_date(*args):
+            return original(*args, target_date=date(2026, 10, 22))
+
+        with patch.object(
+            coordinator_module, "calculate_dated", side_effect=calculate_at_fixed_date
+        ):
+            result = await coordinator._async_update_data()
+        self.assertEqual(result["value"], 618011.05)
+        self.assertEqual(calls, ["85792NED", "85791NED"])
+        self.assertEqual(result["calculation_mode"], "daily_forecast")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -17,9 +17,16 @@ De sensor is numeriek, met valuta EUR. Iedere woning heeft een eigen apparaat en
 
 `waarde = bekende waarde * groei_woningtype * groei_regio / groei_Nederland`
 
-Iedere groeifactor is de index in het nieuwste gemeenschappelijke kwartaal gedeeld door de index in het referentiekwartaal. De landelijke woningtypeontwikkeling wordt dus gecorrigeerd voor de regionale ontwikkeling ten opzichte van Nederland. Dit is een **afgeleide gecombineerde schatting**, geen afzonderlijk door CBS gepubliceerde index voor het woningtype binnen die regio.
+Iedere groeifactor is de verhouding van twee CBS-indexstanden; dezelfde datums of kwartalen worden gebruikt voor alle drie reeksen. De landelijke woningtypeontwikkeling wordt gecorrigeerd voor de regionale ontwikkeling ten opzichte van Nederland. Dit is een **afgeleide gecombineerde schatting**, geen afzonderlijk door CBS gepubliceerde index voor het woningtype binnen die regio.
 
-De datum wordt ingedeeld in het kalenderkwartaal waarin hij ligt. Er is geen daginterpolatie of extrapolatie. Het nieuwste gemeenschappelijke gepubliceerde kwartaal staat in `latest_period`. Alle drie de reeksen moeten een positieve index voor het referentiekwartaal bevatten. Ontbreekt die, dan meldt de integratie de ontbrekende gegevens en wordt de sensor niet beschikbaar.
+Via **Berekeningsmethode** kies je expliciet:
+
+- **Kwartaal zonder prognose (oude methode):** de referentiedatum gebruikt de index van het kwartaal waarin hij ligt. De eindwaarde gebruikt het laatst gemeenschappelijk gepubliceerde kwartaal. Geen daginterpolatie of prognose. Bestaande configuraties behouden deze methode tot je zelf een andere kiest.
+- **Datumberekening met prognose:** de index van een kwartaal wordt als modelconventie geplaatst op de eerste dag **na** dat kwartaal. Zo gebruikt 1 juli 2016 de index van kwartaal 2, niet kwartaal 3. Tussen aansluitende kwartaalgrenzen wordt lineair geinterpoleerd op basis van werkelijke kalenderdagen. Na de laatste gemeenschappelijke kwartaalgrens wordt de laatst waargenomen indexverandering lineair doorgetrokken, maximaal vier kalendermaanden. Ontbrekende kwartalen worden niet overbrugd. Nieuwe configuraties bieden deze methode als standaard aan.
+
+Een kwartaalindex is geen door CBS gepubliceerde dagprijs. De datumberekening en het doortrekken van een trend zijn expliciete modelaannames. Na de laatste publicatie is `value` dus een prognose; `is_forecast`, `forecast_days`, `published_date`, `valuation_date` en `forecast_method` maken dit zichtbaar. `indexed_value` toont apart de waarde op de laatste gemeenschappelijke kwartaalgrens zonder extrapolatie. `indices` toont de referentie-, gepubliceerde en berekende eindindices.
+
+Ontbreekt een noodzakelijke index, of ligt de prognosedatum meer dan vier maanden voorbij de laatste publicatie, dan meldt de integratie de ontbrekende gegevens in plaats van onbeperkt een oude trend door te trekken.
 
 Regio en woningtype zijn afzonderlijke keuzes:
 
@@ -32,7 +39,7 @@ Bij **Alle woningtypen** vervalt de woningtypecorrectie en volgt de uitkomst de 
 
 Een fictieve controleberekening bij BerekenHet (18 oktober 2026; Gelderland, twee onder een kap, EUR 250.000 op 01-01-2020, gevraagd 01-07-2026) toonde regionale, landelijke en woningtypewaarden van respectievelijk EUR 435.500, EUR 408.200 en EUR 413.200, met een gecombineerde uitkomst EUR 440.800. De verhouding `413200 * 435500 / 408200` rondt af op dezelfde uitkomst. Dit ondersteunt de gebruikte multiplicatieve correctie. Het is geen volledige reconstructie van de niet-gepubliceerde BerekenHet-formule.
 
-De precieze verwerking van datums door BerekenHet is niet volledig gereconstrueerd; de site beschrijft wel extrapolatie na de laatste publicatie. Deze integratie gebruikt uitsluitend gepubliceerde kwartaalindices, zonder daginterpolatie of extrapolatie. Exact gelijke bedragen voor iedere datum worden daarom niet beloofd.
+De precieze verwerking van datums door BerekenHet is niet volledig gereconstrueerd; de site beschrijft wel extrapolatie na de laatste publicatie. Deze integratie gebruikt de huidige CBS-reeks. De oude kwartaalmethode stopt bij de publicatie; de nieuwe datummethode interpoleert en extrapoleert expliciet. Een identieke uitkomst als BerekenHet wordt niet beloofd: ook de historische bronreeksen verschillen. Zie de analyse hieronder.
 
 ## Frequentie en netwerkbelasting
 
@@ -112,3 +119,20 @@ Regio en woningtype kunnen nu tegelijk ingesteld worden via **Opnieuw configurer
 Configuraties uit b1-b3 blijven werken zonder opnieuw toevoegen: een oude regionale keuze blijft dezelfde regio met **Alle woningtypen**; een oude woningtypekeuze blijft dat type met regio **Nederland**. Er wordt geen woningtype voor je geraden. Kies via Opnieuw configureren zelf de gewenste combinatie. De sensoridentiteit blijft behouden.
 
 De standaardberekening is nu de gecombineerde formule, met beide groeifactoren en hun landelijke correctie zichtbaar in de sensorattributen. De dagelijkse cachelimiet en het icoon blijven behouden. Werk via HACS bij naar `v1.0.1b4` en herstart Home Assistant.
+
+## Prerelease v1.0.1b5: datumverwerking en prognose
+
+**Onderzocht op 22 oktober 2026, zonder factoren te fitten.** Zie [de volledige analyse](docs/analysis-2026-10-22.md).
+
+Voor Limburg, twee onder een kap, EUR 309.000 op 1 juli 2016 en als einddatum 22 oktober 2026:
+
+| Berekening met actuele CBS PBK2020 | Waarde |
+| --- | ---: |
+| Oude kwartaalmethode | EUR 607.441,75 |
+| Referentiedatum op juiste kwartaalgrens volgens de nieuwe datumconventie, einddatum 1 oktober | EUR 616.406,46 |
+| Datumberekening met lineaire prognose tot 22 oktober | EUR 618.011,05 |
+| BerekenHet volgens screenshot en eigen controle | EUR 622.900 |
+
+De historische BerekenHet-grafiekpunten tot en met 1 januari 2024 sluiten aan op de gearchiveerde PBK2015-reeks. Alle 31 gecontroleerde punten per regio/landelijk/type (93 punten totaal) komen overeen binnen de normale afronding op EUR 100. De huidige PBK2020-reeks bevat herziene historische prijsverhoudingen. De overgang/afronding van BerekenHet na 2023 is niet volledig gereconstrueerd. De resterende afwijking wordt daarom niet met een schaalfactor of een onverklaarde koppeling tussen reeksen weggewerkt.
+
+**Bijwerken:** installeer `v1.0.1b5` via HACS, herstart en kies bij **Opnieuw configureren > Berekeningsmethode > Datumberekening met prognose**. De standaard voor bestaande configuraties blijft de oude kwartaalmethode totdat je zelf wisselt. De woning- en sensoridentiteit blijven behouden. De dagelijkse broncache blijft ongewijzigd; publicaties kunnen daardoor maximaal circa 24 uur later worden opgehaald. Controleer `latest_period` als je met een zojuist gepubliceerde CBS-tabel vergelijkt.

@@ -4,26 +4,28 @@
     "step": {
       "user": {
         "title": "Woningwaarde",
-        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.",
+        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.Date calculation anchors a quarter index at the first day after that quarter and interpolates linearly. After the last publication it extends the last quarter trend for up to four months. This is a forecast. The old quarter method remains available separately.",
         "data": {
           "house_id": "House ID (unique and permanent)",
           "name": "Name",
           "waarde": "Known value (EUR)",
           "datum": "Reference date",
           "region": "Province or municipality",
-          "woningtype": "House type"
+          "woningtype": "House type",
+          "calculation_mode": "Calculation method"
         }
       },
       "reconfigure": {
         "title": "Woningwaarde",
-        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.",
+        "description": "Choose a region and house type. National house-type growth is adjusted by regional growth relative to the Netherlands. This is a combined estimate, not a separate regional house-type index.Date calculation anchors a quarter index at the first day after that quarter and interpolates linearly. After the last publication it extends the last quarter trend for up to four months. This is a forecast. The old quarter method remains available separately.",
         "data": {
           "house_id": "House ID (unique and permanent)",
           "name": "Name",
           "waarde": "Known value (EUR)",
           "datum": "Reference date",
           "region": "Province or municipality",
-          "woningtype": "House type"
+          "woningtype": "House type",
+          "calculation_mode": "Calculation method"
         }
       }
     },
