@@ -1,16 +1,16 @@
-"""Pure price-index calculation; explicit regional correction, without extrapolation."""
+"""CBS calculations with explicit quarter and date-based forecast modes."""
 
 import math
 from datetime import UTC, date, datetime
 
 
-def validate(data):
+def validate(data, today=None):
     """Validate price, date and user-supplied house identifier."""
     value = float(data["waarde"])
     known = date.fromisoformat(str(data["datum"]))
     if not math.isfinite(value) or value <= 0:
         raise ValueError("invalid value")
-    if not date(1995, 1, 1) <= known <= datetime.now(UTC).date():
+    if not date(1995, 1, 1) <= known <= (today or datetime.now(UTC).date()):
         raise ValueError("invalid date")
     if not data["name"].strip() or not data["house_id"].strip():
         raise ValueError("empty identifier")
@@ -57,9 +57,9 @@ def index_map(rows):
     return indices
 
 
-def calculate_combined(region_rows, type_rows, national_rows, data):
+def calculate_combined(region_rows, type_rows, national_rows, data, today=None):
     """Type growth corrected by regional/national growth, at a common quarter."""
-    known = validate(data)
+    known = validate(data, today=today)
     base = f"{known.year}KW{(known.month - 1) // 3 + 1:02}"
     indices = {
         "region": index_map(region_rows),
@@ -139,8 +139,8 @@ def calculate_dated(region_rows, type_rows, national_rows, data, target_date=Non
     modelling convention, not a claim that CBS publishes daily house prices.
     All calculations use the current CBS series without fitted scaling factors.
     """
-    known = validate(data)
     target = target_date or datetime.now(UTC).date()
+    known = validate(data, today=target)
     if target < known:
         raise ValueError("Valuation date precedes the reference date")
     indices = {

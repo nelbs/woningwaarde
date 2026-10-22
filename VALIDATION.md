@@ -38,3 +38,7 @@ Versie 1.0.1: drie extra regressietests voor de ingevoerde woningnaam (inclusief
 ## Versie v1.0.1b6 - 23 oktober 2026
 
 54 geisoleerde tests geslaagd. Nieuwe regressie: een controle 0,5 seconde voor het verstrijken van 24 uur gebruikt de cache; de volgende uurlijkse controle haalt de inmiddels beschikbare Q3-cijfers op. Verder getest: 24 uurlijkse cachecontroles veroorzaken slechts een netwerkpoging; diagnostische tijdstempels onderscheiden lokale controle van een echte bronpoging en tonen de correcte 24-uursgrens. Het planningsgedrag is gecontroleerd in de broncode van Home Assistant 2026.10.2 (`int(loop.time())` plus een willekeurige fractie). Geen volledige live HA-timertest; de coordinatorgrens in de tests is gestubd.
+
+## Versie v1.0.1b7 - 23 oktober 2026
+
+58 geisoleerde tests geslaagd. Nieuwe tests controleren de waarderingsdatum rond Nederlandse middernacht, een westelijke tijdzone, de winteroffset en invoervalidatie op de lokale kalenderdag. HA's tijdzonehelper wordt aangeroepen; in de unit tests is die grens gestubd met expliciete tijdzonebewuste tijdstippen. De bestaande 54 tests blijven slagen. De gebruiker heeft met sensorattributen bevestigd dat Q3 inmiddels opgehaald is; er is geen eigen volledige live HA-test uitgevoerd.

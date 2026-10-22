@@ -149,3 +149,11 @@ Nieuwe sensorattributen:
 Bijwerken: installeer `v1.0.1b6` via HACS en herstart Home Assistant. Een verlopen cache wordt bij het starten opgehaald; een nog geldige cache blijft gerespecteerd. Controleer daarna `last_checked`, `source_cache` en `latest_period`. De rekenformule en de keuze voor kwartaalmethode of prognose zijn niet veranderd.
 
 De op 23 oktober gemelde attributen tonen alleen dat de laatste geslaagde berekening nog 22 oktober en kwartaal 2 gebruikte. Zonder runtimelog en het toenmalige tijdstip kan niet bewezen worden dat precies deze timingfout de oorzaak in die installatie was; de aangetoonde fout in de code is wel verholpen. Blijft ook `last_checked` stilstaan, controleer dan automatische polling en de Home Assistant-logboeken.
+
+## Prerelease v1.0.1b7: waarderingsdatum in de HA-tijdzone
+
+De prognose gebruikt nu de kalenderdatum in de **ingestelde Home Assistant-tijdzone**. Ook validatie van de referentiedatum gebruikt die dag. Eerder gebruikte de berekening UTC; in Nederland kon de waarderingsdatum daardoor de eerste een of twee uur na middernacht nog op gisteren staan. Er is geen vaste Nederlandse offset ingebouwd: de tijdzone van HA is leidend.
+
+De diagnostische tijdstempels `last_checked` en `source_cache` blijven expliciet UTC (`+00:00`), zodat de 24-uurscache ook rond zomer-/wintertijd een echte verstreken periode van 24 uur blijft gebruiken.
+
+Voor de eerder onderzochte invoer, met CBS Q3 2026, is de prognose voor 22 oktober EUR 618.011,05 en voor 23 oktober EUR 618.087,46. De gepubliceerde indexwaarde blijft EUR 616.406,46. Installeer `v1.0.1b7` via HACS en herstart Home Assistant om de datumfix toe te passen. Rekenformule en cachelimiet zijn gelijk gebleven.

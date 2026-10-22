@@ -6,6 +6,7 @@ import json
 import sys
 import types
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -55,6 +56,10 @@ sys.modules["homeassistant.helpers.aiohttp_client"].async_get_clientsession = (
     lambda hass: hass
 )
 api = load("api")
+sys.modules["homeassistant.util"] = types.ModuleType("homeassistant.util")
+sys.modules["homeassistant.util"].dt = types.SimpleNamespace(
+    now=lambda: datetime.now(UTC)
+)
 
 DATA = {"name": "Thuis", "house_id": "thuis", "waarde": 250000, "datum": "2020-02-20"}
 
@@ -693,8 +698,8 @@ class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
         # Freeze only the default target date; keep the implementation under test.
         original = calc.calculate_dated
 
-        def calculate_at_fixed_date(*args):
-            return original(*args, target_date=date(2026, 10, 22))
+        def calculate_at_fixed_date(*args, **kwargs):
+            return original(*args, **{**kwargs, "target_date": date(2026, 10, 22)})
 
         with patch.object(
             coordinator_module, "calculate_dated", side_effect=calculate_at_fixed_date
@@ -777,6 +782,89 @@ class RefreshTimingTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertIsNotNone(datetime.fromisoformat(cached["last_checked"]).tzinfo)
         self.assertEqual(session.calls, 1)
+
+
+class LocalDateTests(unittest.IsolatedAsyncioTestCase):
+    async def calculate_at(self, local_now):
+        fixture = json.loads(
+            (ROOT / "tests/fixtures/limburg_20261022.json").read_text()
+        )
+
+        async def rows(table):
+            if table == "85792NED":
+                return fixture["series"]["PV31"] + fixture["series"]["NL01"]
+            return fixture["series"]["ZW10300"]
+
+        entry = types.SimpleNamespace(
+            data={
+                **fixture["input"],
+                "region": "PV31",
+                "woningtype": "ZW10300",
+                "calculation_mode": "daily_forecast",
+            }
+        )
+        coordinator = coordinator_module.WoningCoordinator(
+            None, entry, types.SimpleNamespace(rows=rows, cache={})
+        )
+        with patch.object(coordinator_module.dt_util, "now", return_value=local_now):
+            return await coordinator._async_update_data()
+
+    async def test_dutch_midnight_uses_configured_day(self):
+        from datetime import timedelta, timezone
+
+        local_now = datetime(2026, 10, 23, 0, 9, tzinfo=timezone(timedelta(hours=2)))
+        self.assertEqual(local_now.astimezone(UTC).day, 22)
+        result = await self.calculate_at(local_now)
+        self.assertEqual(result["valuation_date"], "2026-10-23")
+        self.assertEqual(result["forecast_days"], 22)
+        self.assertEqual(result["value"], 618087.46)
+
+    async def test_western_timezone_keeps_previous_local_day(self):
+        from datetime import timedelta, timezone
+
+        local_now = datetime(2026, 10, 22, 20, 9, tzinfo=timezone(timedelta(hours=-4)))
+        self.assertEqual(local_now.astimezone(UTC).day, 23)
+        result = await self.calculate_at(local_now)
+        self.assertEqual(result["valuation_date"], "2026-10-22")
+        self.assertEqual(result["value"], 618011.05)
+
+    async def test_winter_offset_is_not_hard_coded_to_summer(self):
+        from datetime import timedelta, timezone
+
+        local_now = datetime(2026, 11, 1, 0, 9, tzinfo=timezone(timedelta(hours=1)))
+        self.assertEqual(local_now.astimezone(UTC).day, 31)
+        result = await self.calculate_at(local_now)
+        self.assertEqual(result["valuation_date"], "2026-11-01")
+        self.assertEqual(result["forecast_days"], 31)
+
+    async def test_reference_date_validation_uses_same_local_day(self):
+        from datetime import date, timedelta, timezone
+
+        local_now = datetime(2026, 10, 23, 0, 9, tzinfo=timezone(timedelta(hours=2)))
+        flow = flow_module.WoningwaardeConfigFlow()
+        with patch.object(flow_module.dt_util, "now", return_value=local_now):
+            result = await flow.async_step_user(
+                {
+                    **DATA,
+                    "datum": "2026-10-23",
+                    "region": "PV31",
+                    "woningtype": "ZW10300",
+                }
+            )
+            invalid = await flow.async_step_user(
+                {
+                    **DATA,
+                    "datum": "2026-10-24",
+                    "region": "PV31",
+                    "woningtype": "ZW10300",
+                }
+            )
+        self.assertEqual(result["type"], "create_entry")
+        self.assertEqual(invalid["errors"], {"base": "invalid_input"})
+        self.assertEqual(
+            calc.validate({**DATA, "datum": "2026-10-23"}, today=date(2026, 10, 23)),
+            date(2026, 10, 23),
+        )
 
 
 if __name__ == "__main__":

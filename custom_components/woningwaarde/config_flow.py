@@ -3,6 +3,7 @@
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import selector
+from homeassistant.util import dt as dt_util
 
 from .calculate import validate
 from .const import CALCULATION_MODES, DOMAIN, HOUSE_TYPES, REGIONS, selections
@@ -40,7 +41,7 @@ class WoningwaardeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                validate(user_input)
+                validate(user_input, today=dt_util.now().date())
             except (ValueError, TypeError, OverflowError):
                 errors["base"] = "invalid_input"
             else:
@@ -63,7 +64,7 @@ class WoningwaardeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                validate(user_input)
+                validate(user_input, today=dt_util.now().date())
             except (ValueError, TypeError, OverflowError):
                 errors["base"] = "invalid_input"
             else:
