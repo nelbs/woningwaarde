@@ -63,3 +63,6 @@ CALCULATION_MODES = {
     "quarter": "Kwartaal zonder prognose (oude methode)",
     "daily_forecast": "Datumberekening met prognose",
 }
+
+# Shared hard limit for network attempts, independent of local entity updates.
+CACHE_TTL_SECONDS = 24 * 60 * 60

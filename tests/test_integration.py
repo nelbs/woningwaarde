@@ -428,7 +428,7 @@ class CombinedTests(unittest.TestCase):
 
 class FakeDataCoordinator:
     def __init__(self, *args, **kwargs):
-        pass
+        self.update_interval = kwargs.get("update_interval")
 
 
 class FakeUpdateFailed(Exception):
@@ -453,7 +453,7 @@ class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
 
         entry = types.SimpleNamespace(data={**DATA, **data})
         return coordinator_module.WoningCoordinator(
-            None, entry, types.SimpleNamespace(rows=rows)
+            None, entry, types.SimpleNamespace(rows=rows, cache={})
         ), calls
 
     async def test_combined_fetches_both_tables(self):
@@ -688,7 +688,7 @@ class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
             }
         )
         coordinator = coordinator_module.WoningCoordinator(
-            None, entry, types.SimpleNamespace(rows=rows)
+            None, entry, types.SimpleNamespace(rows=rows, cache={})
         )
         # Freeze only the default target date; keep the implementation under test.
         original = calc.calculate_dated
@@ -703,6 +703,80 @@ class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result["value"], 618011.05)
         self.assertEqual(calls, ["85792NED", "85791NED"])
         self.assertEqual(result["calculation_mode"], "daily_forecast")
+
+
+class RefreshTimingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_early_daily_callback_does_not_delay_fetch_another_day(self):
+        from datetime import timedelta
+
+        fixture = json.loads(
+            (ROOT / "tests/fixtures/limburg_20261022.json").read_text()
+        )
+        new_rows = fixture["series"]["PV31"] + fixture["series"]["NL01"]
+        old_rows = [r for r in new_rows if r["Perioden"] != "2026KW03"]
+        session = Session([{"value": old_rows}, {"value": new_rows}])
+        client = api.CBSClient(session)
+        entry = types.SimpleNamespace(
+            data={**fixture["input"], "region": "PV31", "woningtype": "T001100"}
+        )
+        coordinator = coordinator_module.WoningCoordinator(None, entry, client)
+        self.assertEqual(coordinator.update_interval, timedelta(hours=1))
+        start = 1800000000
+        with patch.object(api.time, "time", return_value=start):
+            first = await coordinator._async_update_data()
+        self.assertEqual(first["latest_period"], "2026KW02")
+        self.assertEqual(session.calls, 1)
+        # The original daily HA callback can run a fraction of a second early.
+        with patch.object(api.time, "time", return_value=start + 86400 - 0.5):
+            still_cached = await coordinator._async_update_data()
+        self.assertEqual(still_cached["latest_period"], "2026KW02")
+        self.assertEqual(session.calls, 1)
+        # The next local hourly check fetches after expiry, rather than waiting a day.
+        with patch.object(api.time, "time", return_value=start + 86400 - 0.5 + 3600):
+            fresh = await coordinator._async_update_data()
+        self.assertEqual(fresh["latest_period"], "2026KW03")
+        self.assertEqual(session.calls, 2)
+
+    async def test_hourly_checks_keep_hard_network_limit(self):
+        session = Session()
+        client = api.CBSClient(session)
+        for hour in range(24):
+            with patch.object(api.time, "time", return_value=1800000000 + hour * 3600):
+                await client.rows("85792NED")
+        self.assertEqual(session.calls, 1)
+        with patch.object(api.time, "time", return_value=1800000000 + 86400):
+            await client.rows("85792NED")
+        self.assertEqual(session.calls, 2)
+
+    async def test_cache_diagnostics_show_eligibility_without_claiming_a_fetch(self):
+        from datetime import datetime
+
+        fixture = json.loads(
+            (ROOT / "tests/fixtures/limburg_20261022.json").read_text()
+        )
+        rows = fixture["series"]["PV31"] + fixture["series"]["NL01"]
+        session = Session([{"value": rows}])
+        client = api.CBSClient(session)
+        entry = types.SimpleNamespace(
+            data={**fixture["input"], "region": "PV31", "woningtype": "T001100"}
+        )
+        coordinator = coordinator_module.WoningCoordinator(None, entry, client)
+        start = 1800000000
+        with patch.object(api.time, "time", return_value=start):
+            first = await coordinator._async_update_data()
+        with patch.object(api.time, "time", return_value=start + 3600):
+            cached = await coordinator._async_update_data()
+        self.assertEqual(first["source_cache"], cached["source_cache"])
+        info = cached["source_cache"]["85792NED"]
+        self.assertEqual(
+            datetime.fromisoformat(info["last_attempt"]).timestamp(), start
+        )
+        self.assertEqual(
+            datetime.fromisoformat(info["next_attempt_eligible"]).timestamp(),
+            start + 86400,
+        )
+        self.assertIsNotNone(datetime.fromisoformat(cached["last_checked"]).tzinfo)
+        self.assertEqual(session.calls, 1)
 
 
 if __name__ == "__main__":

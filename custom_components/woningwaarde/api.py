@@ -2,13 +2,12 @@
 
 import asyncio
 import time
-from datetime import timedelta
 
 import aiohttp
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, INDEX
+from .const import CACHE_TTL_SECONDS, DOMAIN, INDEX
 
 
 class CBSClient:
@@ -25,7 +24,7 @@ class CBSClient:
         async with self.lock:
             now = time.time()
             cached = self.cache.get(table, {})
-            if now - cached.get("attempt", 0) < timedelta(days=1).total_seconds():
+            if now - cached.get("attempt", 0) < CACHE_TTL_SECONDS:
                 if cached.get("error"):
                     raise ValueError("CBS unavailable; next attempt after 24 hours")
                 return cached["rows"]

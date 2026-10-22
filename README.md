@@ -43,9 +43,9 @@ De precieze verwerking van datums door BerekenHet is niet volledig gereconstruee
 
 ## Frequentie en netwerkbelasting
 
-Iedere woningcoordinator controleert eens per 24 uur. Alle woningen delen dezelfde **op schijf opgeslagen** cache van de twee CBS-tabellen. Per gebruikte tabel wordt hoogstens eens per 24 uur een nieuwe ophaalpoging gedaan, ook bij herladen, herstarten, handmatig bijwerken of een bronfout. Woningen die dezelfde tabel gebruiken veroorzaken geen extra CBS-verzoeken. Per tabel is normaal een GET nodig; bij CBS-paginering worden vervolgpagina's binnen dezelfde poging opgehaald. Alleen gebruikte tabellen worden opgehaald. Het verwijderen van de cache of een tweede HA-installatie valt buiten deze limiet.
+Iedere woningcoordinator controleert lokaal eens per uur. Dit herberekent met de opgeslagen gegevens en controleert of de broncache verlopen is; het betekent niet dat er ieder uur een CBS-verzoek wordt gedaan. Alle woningen delen dezelfde **op schijf opgeslagen** cache van de twee CBS-tabellen. Per gebruikte tabel wordt hoogstens eens per 24 uur een nieuwe ophaalpoging gedaan, ook bij herladen, herstarten, handmatig bijwerken of een bronfout. Woningen die dezelfde tabel gebruiken veroorzaken geen extra CBS-verzoeken. Per tabel is normaal een GET nodig; bij CBS-paginering worden vervolgpagina's binnen dezelfde poging opgehaald. Alleen gebruikte tabellen worden opgehaald. Het verwijderen van de cache of een tweede HA-installatie valt buiten deze limiet.
 
-HTTP-time-out: 30 seconden per verzoek, 60 seconden voor de hele ophaalpoging. Geen automatische netwerkretry binnen de 24 uur; na een mislukte poging kan herstel dus maximaal circa een dag duren. De API ontvangt geen woningnamen, adressen of prijzen. De configuratie en cache worden lokaal door Home Assistant opgeslagen.
+HTTP-time-out: 30 seconden per verzoek, 60 seconden voor de hele ophaalpoging. Geen automatische netwerkretry binnen de 24 uur; na een mislukte poging volgt de eerstvolgende toegestane netwerkpoging na 24 uur, normaal bij een lokale controle binnen het daaropvolgende uur. De API ontvangt geen woningnamen, adressen of prijzen. De configuratie en cache worden lokaal door Home Assistant opgeslagen.
 
 ## Overstappen van versie 0.x (YAML)
 
@@ -136,3 +136,16 @@ Voor Limburg, twee onder een kap, EUR 309.000 op 1 juli 2016 en als einddatum 22
 De historische BerekenHet-grafiekpunten tot en met 1 januari 2024 sluiten aan op de gearchiveerde PBK2015-reeks. Alle 31 gecontroleerde punten per regio/landelijk/type (93 punten totaal) komen overeen binnen de normale afronding op EUR 100. De huidige PBK2020-reeks bevat herziene historische prijsverhoudingen. De overgang/afronding van BerekenHet na 2023 is niet volledig gereconstrueerd. De resterende afwijking wordt daarom niet met een schaalfactor of een onverklaarde koppeling tussen reeksen weggewerkt.
 
 **Bijwerken:** installeer `v1.0.1b5` via HACS, herstart en kies bij **Opnieuw configureren > Berekeningsmethode > Datumberekening met prognose**. De standaard voor bestaande configuraties blijft de oude kwartaalmethode totdat je zelf wisselt. De woning- en sensoridentiteit blijven behouden. De dagelijkse broncache blijft ongewijzigd; publicaties kunnen daardoor maximaal circa 24 uur later worden opgehaald. Controleer `latest_period` als je met een zojuist gepubliceerde CBS-tabel vergelijkt.
+
+## Prerelease v1.0.1b6: lokale controle en broncache apart plannen
+
+De lokale controle vindt nu eens per uur plaats, terwijl de harde limiet voor CBS-ophaalpogingen **24 uur per tabel** blijft. Dit voorkomt dat een fractie te vroeg geplande dagelijkse HA-update de broncache nog net geldig vindt en daarna nog een hele dag wacht. Home Assistant rondt het moment van de coordinatorupdate af; een exact gelijke lokale interval en cacheduur waren daarom geen betrouwbare combinatie.
+
+Nieuwe sensorattributen:
+
+- `last_checked`: het tijdstip waarop de laatste lokale berekening geslaagd is (ISO-tijd met UTC-offset). Dit bewijst geen nieuw CBS-verzoek.
+- `source_cache`: per CBS-tabel `last_attempt` en `next_attempt_eligible`, eveneens met UTC-offset. De tweede tijd is het vroegste toegestane tijdstip, geen garantie dat er precies dan een verzoek plaatsvindt. Bij ingeschakelde automatische polling volgt normaal binnen het volgende uur een controle.
+
+Bijwerken: installeer `v1.0.1b6` via HACS en herstart Home Assistant. Een verlopen cache wordt bij het starten opgehaald; een nog geldige cache blijft gerespecteerd. Controleer daarna `last_checked`, `source_cache` en `latest_period`. De rekenformule en de keuze voor kwartaalmethode of prognose zijn niet veranderd.
+
+De op 23 oktober gemelde attributen tonen alleen dat de laatste geslaagde berekening nog 22 oktober en kwartaal 2 gebruikte. Zonder runtimelog en het toenmalige tijdstip kan niet bewezen worden dat precies deze timingfout de oorzaak in die installatie was; de aangetoonde fout in de code is wel verholpen. Blijft ook `last_checked` stilstaan, controleer dan automatische polling en de Home Assistant-logboeken.

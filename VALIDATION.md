@@ -34,3 +34,7 @@ Versie 1.0.1: drie extra regressietests voor de ingevoerde woningnaam (inclusief
 ## Versie v1.0.1b5 - 22 oktober 2026
 
 51 geisoleerde tests geslaagd. Zie docs/analysis-2026-10-22.md voor de bronvergelijking en de resterende, niet weggefitte afwijking ten opzichte van BerekenHet. Nieuwe tests dekken de dagconventie, lineaire interpolatie/extrapolatie, 21/92 dagen in het gebruikersvoorbeeld, 93 historische grafiekpunten, datumgrenzen, ontbrekende kwartalen, schrikkeldagen en de expliciete methodekeuze. De bestaande dagelijkse cache en standaard voor bestaande configuraties blijven behouden. HA-grens is gestubd; geen live HA-installatietest.
+
+## Versie v1.0.1b6 - 23 oktober 2026
+
+54 geisoleerde tests geslaagd. Nieuwe regressie: een controle 0,5 seconde voor het verstrijken van 24 uur gebruikt de cache; de volgende uurlijkse controle haalt de inmiddels beschikbare Q3-cijfers op. Verder getest: 24 uurlijkse cachecontroles veroorzaken slechts een netwerkpoging; diagnostische tijdstempels onderscheiden lokale controle van een echte bronpoging en tonen de correcte 24-uursgrens. Het planningsgedrag is gecontroleerd in de broncode van Home Assistant 2026.10.2 (`int(loop.time())` plus een willekeurige fractie). Geen volledige live HA-timertest; de coordinatorgrens in de tests is gestubd.

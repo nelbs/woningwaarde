@@ -1,13 +1,13 @@
 """One coordinator per house; all houses share the CBS cache."""
 
 import logging
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 
 import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .calculate import calculate_combined, calculate_dated
-from .const import DOMAIN, REGION_TABLE, TYPE_TABLE, selections
+from .const import CACHE_TTL_SECONDS, DOMAIN, REGION_TABLE, TYPE_TABLE, selections
 
 
 class WoningCoordinator(DataUpdateCoordinator):
@@ -17,7 +17,10 @@ class WoningCoordinator(DataUpdateCoordinator):
             logging.getLogger(__name__),
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(days=1),
+            # HA rounds scheduled deadlines; a daily job may run just before the
+            # independent 24-hour cache expires. Check locally each hour so a
+            # cache hit cannot defer the next network attempt by a whole day.
+            update_interval=timedelta(hours=1),
         )
         self.entry = entry
         self.client = client
@@ -51,11 +54,25 @@ class WoningCoordinator(DataUpdateCoordinator):
             TypeError,
         ) as err:
             raise UpdateFailed(f"CBS index could not be updated: {err}") from err
+        tables = (
+            [REGION_TABLE] if woningtype == "T001100" else [REGION_TABLE, TYPE_TABLE]
+        )
+        cache_times = {}
+        for table in tables:
+            cached = self.client.cache.get(table)
+            if cached is not None:
+                attempt = cached["attempt"]
+                cache_times[table] = {
+                    "last_attempt": datetime.fromtimestamp(attempt, UTC).isoformat(),
+                    "next_attempt_eligible": datetime.fromtimestamp(
+                        attempt + CACHE_TTL_SECONDS, UTC
+                    ).isoformat(),
+                }
         return {
             **result,
             "region": region,
             "woningtype": woningtype,
-            "tables": [REGION_TABLE]
-            if woningtype == "T001100"
-            else [REGION_TABLE, TYPE_TABLE],
+            "tables": tables,
+            "last_checked": datetime.now(UTC).isoformat(),
+            "source_cache": cache_times,
         }
