@@ -7,7 +7,7 @@ import aiohttp
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 
-from .const import CACHE_TTL_SECONDS, DOMAIN, INDEX
+from .const import CACHE_TTL_SECONDS, DOMAIN, FAILED_RETRY_SECONDS, INDEX
 
 
 class CBSClient:
@@ -24,9 +24,12 @@ class CBSClient:
         async with self.lock:
             now = time.time()
             cached = self.cache.get(table, {})
-            if now - cached.get("attempt", 0) < CACHE_TTL_SECONDS:
+            ttl = FAILED_RETRY_SECONDS if cached.get("error") else CACHE_TTL_SECONDS
+            if now - cached.get("attempt", 0) < ttl:
                 if cached.get("error"):
-                    raise ValueError("CBS unavailable; next attempt after 24 hours")
+                    raise ValueError(
+                        "CBS unavailable; retry allowed 5 minutes after last attempt"
+                    )
                 return cached["rows"]
             # Save the attempt before I/O, also enforcing the limit after a restart.
             self.cache[table] = {**cached, "attempt": now, "error": True}

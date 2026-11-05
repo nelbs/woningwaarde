@@ -59,10 +59,6 @@ def selections(data):
     )
 
 
-CALCULATION_MODES = {
-    "quarter": "Kwartaal zonder prognose (oude methode)",
-    "daily_forecast": "Datumberekening met prognose",
-}
-
-# Shared hard limit for network attempts, independent of local entity updates.
+# Successful responses are cached daily; failed attempts have a shorter backoff.
 CACHE_TTL_SECONDS = 24 * 60 * 60
+FAILED_RETRY_SECONDS = 5 * 60

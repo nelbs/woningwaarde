@@ -2,6 +2,10 @@
 
 Home Assistant-integratie voor een **geindexeerde woningwaarde** op basis van de openbare CBS/Kadaster Prijsindex Bestaande Koopwoningen (2020=100). Geen API-sleutel, scraping of verzoeken aan BerekenHet nodig.
 
+## Prerelease v1.0.1b8
+
+Mislukte CBS-aanvragen kunnen vanaf vijf minuten opnieuw worden geprobeerd; geslaagde aanvragen blijven 24 uur gecachet. De oude kwartaalmethode en de keuzelijst zijn verwijderd: bestaande woningen gebruiken automatisch datumberekening met prognose, waardoor hun waarde kan veranderen. De geldsensor ondersteunt nu langetermijnstatistieken. Installeer v1.0.1b8 via HACS en herstart Home Assistant; opnieuw configureren is niet nodig. Eerder verwijderde historie wordt niet hersteld.
+
 ## Installeren en woningen toevoegen
 
 1. Installeer als aangepaste HACS-repository (`nelbs/woningwaarde`, categorie Integratie), zodra deze versie daar gepubliceerd is. Voor deze lokale versie: kopieer `custom_components/woningwaarde` naar de map `config/custom_components/woningwaarde` van Home Assistant.
@@ -13,16 +17,19 @@ Home Assistant-integratie voor een **geindexeerde woningwaarde** op basis van de
 
 De sensor is numeriek, met valuta EUR. Iedere woning heeft een eigen apparaat en sensor met unieke ID. Attributen tonen de gekozen regio en het woningtype, CBS-tabellen, referentiewaarde en -datum, de gebruikte indices en groeifactoren en beide kwartalen. Bij een bronfout wordt de sensor niet beschikbaar; een oude waarde wordt niet als actuele waarde aangeboden.
 
+### Langetermijnhistorie
+
+De geldsensor heeft `state_class: total`, de door Home Assistant ondersteunde statistiekklasse voor `monetary`. Daarmee bewaart Recorder langetermijnstatistieken met de stand en verandering van de woningwaarde, ook bij dalingen; er wordt geen tellerreset aangegeven. Deze statistieken blijven standaard bewaard wanneer gedetailleerde historie wordt opgeschoond. Recorder moet ingeschakeld zijn en de sensor mag niet uitgesloten zijn. Statistieken beginnen na installatie van deze wijziging; eerder verwijderde historie wordt niet hersteld. Gebruik de statistiek **state** voor de woningwaarde zelf, niet **sum** (de opgetelde veranderingen).
+
 ## Berekening en dekking
 
 `waarde = bekende waarde * groei_woningtype * groei_regio / groei_Nederland`
 
 Iedere groeifactor is de verhouding van twee CBS-indexstanden; dezelfde datums of kwartalen worden gebruikt voor alle drie reeksen. De landelijke woningtypeontwikkeling wordt gecorrigeerd voor de regionale ontwikkeling ten opzichte van Nederland. Dit is een **afgeleide gecombineerde schatting**, geen afzonderlijk door CBS gepubliceerde index voor het woningtype binnen die regio.
 
-Via **Berekeningsmethode** kies je expliciet:
+Alle woningen gebruiken **datumberekening met prognose**. De oude kwartaalmethode en de keuzelijst zijn verwijderd. Bestaande woningen schakelen automatisch over zonder herconfiguratie; hun berekende waarde kan daardoor veranderen. Woning- en sensoridentiteit blijven behouden.
 
-- **Kwartaal zonder prognose (oude methode):** de referentiedatum gebruikt de index van het kwartaal waarin hij ligt. De eindwaarde gebruikt het laatst gemeenschappelijk gepubliceerde kwartaal. Geen daginterpolatie of prognose. Bestaande configuraties behouden deze methode tot je zelf een andere kiest.
-- **Datumberekening met prognose:** de index van een kwartaal wordt als modelconventie geplaatst op de eerste dag **na** dat kwartaal. Zo gebruikt 1 juli 2016 de index van kwartaal 2, niet kwartaal 3. Tussen aansluitende kwartaalgrenzen wordt lineair geinterpoleerd op basis van werkelijke kalenderdagen. Na de laatste gemeenschappelijke kwartaalgrens wordt de laatst waargenomen indexverandering lineair doorgetrokken, maximaal vier kalendermaanden. Ontbrekende kwartalen worden niet overbrugd. Nieuwe configuraties bieden deze methode als standaard aan.
+De index van een kwartaal wordt als modelconventie geplaatst op de eerste dag **na** dat kwartaal. Zo gebruikt 1 juli 2016 de index van kwartaal 2, niet kwartaal 3. Tussen aansluitende kwartaalgrenzen wordt lineair geinterpoleerd op basis van werkelijke kalenderdagen. Na de laatste gemeenschappelijke kwartaalgrens wordt de laatst waargenomen indexverandering lineair doorgetrokken, maximaal vier kalendermaanden. Ontbrekende kwartalen worden niet overbrugd.
 
 Een kwartaalindex is geen door CBS gepubliceerde dagprijs. De datumberekening en het doortrekken van een trend zijn expliciete modelaannames. Na de laatste publicatie is `value` dus een prognose; `is_forecast`, `forecast_days`, `published_date`, `valuation_date` en `forecast_method` maken dit zichtbaar. `indexed_value` toont apart de waarde op de laatste gemeenschappelijke kwartaalgrens zonder extrapolatie. `indices` toont de referentie-, gepubliceerde en berekende eindindices.
 
@@ -39,13 +46,13 @@ Bij **Alle woningtypen** vervalt de woningtypecorrectie en volgt de uitkomst de 
 
 Een fictieve controleberekening bij BerekenHet (18 oktober 2026; Gelderland, twee onder een kap, EUR 250.000 op 01-01-2020, gevraagd 01-07-2026) toonde regionale, landelijke en woningtypewaarden van respectievelijk EUR 435.500, EUR 408.200 en EUR 413.200, met een gecombineerde uitkomst EUR 440.800. De verhouding `413200 * 435500 / 408200` rondt af op dezelfde uitkomst. Dit ondersteunt de gebruikte multiplicatieve correctie. Het is geen volledige reconstructie van de niet-gepubliceerde BerekenHet-formule.
 
-De precieze verwerking van datums door BerekenHet is niet volledig gereconstrueerd; de site beschrijft wel extrapolatie na de laatste publicatie. Deze integratie gebruikt de huidige CBS-reeks. De oude kwartaalmethode stopt bij de publicatie; de nieuwe datummethode interpoleert en extrapoleert expliciet. Een identieke uitkomst als BerekenHet wordt niet beloofd: ook de historische bronreeksen verschillen. Zie de analyse hieronder.
+De precieze verwerking van datums door BerekenHet is niet volledig gereconstrueerd; de site beschrijft wel extrapolatie na de laatste publicatie. Deze integratie gebruikt de huidige CBS-reeks en interpoleert en extrapoleert expliciet. Een identieke uitkomst als BerekenHet wordt niet beloofd: ook de historische bronreeksen verschillen. Zie de analyse hieronder.
 
 ## Frequentie en netwerkbelasting
 
-Iedere woningcoordinator controleert lokaal eens per uur. Dit herberekent met de opgeslagen gegevens en controleert of de broncache verlopen is; het betekent niet dat er ieder uur een CBS-verzoek wordt gedaan. Alle woningen delen dezelfde **op schijf opgeslagen** cache van de twee CBS-tabellen. Per gebruikte tabel wordt hoogstens eens per 24 uur een nieuwe ophaalpoging gedaan, ook bij herladen, herstarten, handmatig bijwerken of een bronfout. Woningen die dezelfde tabel gebruiken veroorzaken geen extra CBS-verzoeken. Per tabel is normaal een GET nodig; bij CBS-paginering worden vervolgpagina's binnen dezelfde poging opgehaald. Alleen gebruikte tabellen worden opgehaald. Het verwijderen van de cache of een tweede HA-installatie valt buiten deze limiet.
+Iedere woningcoordinator controleert lokaal eens per uur. Dit herberekent met de opgeslagen gegevens en controleert of de broncache verlopen is; het betekent niet dat er ieder uur een CBS-verzoek wordt gedaan. Alle woningen delen dezelfde **op schijf opgeslagen** cache van de twee CBS-tabellen. Geslaagde aanvragen worden 24 uur gecachet, ook bij herladen, herstarten en handmatig bijwerken. Na een mislukte aanvraag mag dezelfde tabel vanaf vijf minuten na de laatste poging opnieuw worden opgehaald. Woningen die dezelfde tabel gebruiken veroorzaken geen extra CBS-verzoeken. Per tabel is normaal een GET nodig; bij CBS-paginering worden vervolgpagina's binnen dezelfde poging opgehaald. Alleen gebruikte tabellen worden opgehaald. Het verwijderen van de cache of een tweede HA-installatie valt buiten deze limiet.
 
-HTTP-time-out: 30 seconden per verzoek, 60 seconden voor de hele ophaalpoging. Geen automatische netwerkretry binnen de 24 uur; na een mislukte poging volgt de eerstvolgende toegestane netwerkpoging na 24 uur, normaal bij een lokale controle binnen het daaropvolgende uur. De API ontvangt geen woningnamen, adressen of prijzen. De configuratie en cache worden lokaal door Home Assistant opgeslagen.
+HTTP-time-out: 30 seconden per verzoek, 60 seconden voor de hele ophaalpoging. Bij updatefouten controleert de coordinator iedere vijf minuten; na herstel weer ieder uur. Een iets te vroeg geplande controle kan de retry naar de volgende controle verschuiven. Bij mislukte eerste installatie bepaalt Home Assistant het schema voor installatieherpogingen; de gedeelde cache bewaakt ook daarbij de wachttijd van vijf minuten, inclusief na een herstart. De 24-uurscache is een keuze van de integratie, geen CBS-serverrestrictie. De API ontvangt geen woningnamen, adressen of prijzen. De configuratie en cache worden lokaal door Home Assistant opgeslagen.
 
 ## Overstappen van versie 0.x (YAML)
 
@@ -135,7 +142,7 @@ Voor Limburg, twee onder een kap, EUR 309.000 op 1 juli 2016 en als einddatum 22
 
 De historische BerekenHet-grafiekpunten tot en met 1 januari 2024 sluiten aan op de gearchiveerde PBK2015-reeks. Alle 31 gecontroleerde punten per regio/landelijk/type (93 punten totaal) komen overeen binnen de normale afronding op EUR 100. De huidige PBK2020-reeks bevat herziene historische prijsverhoudingen. De overgang/afronding van BerekenHet na 2023 is niet volledig gereconstrueerd. De resterende afwijking wordt daarom niet met een schaalfactor of een onverklaarde koppeling tussen reeksen weggewerkt.
 
-**Bijwerken:** installeer `v1.0.1b5` via HACS, herstart en kies bij **Opnieuw configureren > Berekeningsmethode > Datumberekening met prognose**. De standaard voor bestaande configuraties blijft de oude kwartaalmethode totdat je zelf wisselt. De woning- en sensoridentiteit blijven behouden. De dagelijkse broncache blijft ongewijzigd; publicaties kunnen daardoor maximaal circa 24 uur later worden opgehaald. Controleer `latest_period` als je met een zojuist gepubliceerde CBS-tabel vergelijkt.
+**Historisch gedrag in v1.0.1b5:** deze prerelease introduceerde een methodekeuze. In de huidige code is die keuze verwijderd en gebruiken alle woningen automatisch de datumberekening met prognose. De woning- en sensoridentiteit blijven behouden. Geslaagde bronaanvragen worden 24 uur gecachet; publicaties kunnen daardoor maximaal circa 24 uur later worden opgehaald. Controleer `latest_period` als je met een zojuist gepubliceerde CBS-tabel vergelijkt.
 
 ## Prerelease v1.0.1b6: lokale controle en broncache apart plannen
 

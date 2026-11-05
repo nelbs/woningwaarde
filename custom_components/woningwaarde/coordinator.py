@@ -7,8 +7,15 @@ import aiohttp
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .calculate import calculate_combined, calculate_dated
-from .const import CACHE_TTL_SECONDS, DOMAIN, REGION_TABLE, TYPE_TABLE, selections
+from .calculate import calculate_dated
+from .const import (
+    CACHE_TTL_SECONDS,
+    DOMAIN,
+    FAILED_RETRY_SECONDS,
+    REGION_TABLE,
+    TYPE_TABLE,
+    selections,
+)
 
 
 class WoningCoordinator(DataUpdateCoordinator):
@@ -39,19 +46,9 @@ class WoningCoordinator(DataUpdateCoordinator):
                 type_rows = await self.client.rows(TYPE_TABLE)
                 typed = [r for r in type_rows if r["TypeWoning"].strip() == woningtype]
             local_date = dt_util.now().date()
-            mode = data.get("calculation_mode", "quarter")
-            if mode == "daily_forecast":
-                result = calculate_dated(
-                    regional, typed, national, data, target_date=local_date
-                )
-            elif mode == "quarter":
-                result = calculate_combined(
-                    regional, typed, national, data, today=local_date
-                )
-                result["calculation_mode"] = "quarter"
-                result["is_forecast"] = False
-            else:
-                raise ValueError("Unknown calculation mode")
+            result = calculate_dated(
+                regional, typed, national, data, target_date=local_date
+            )
         except (
             aiohttp.ClientError,
             TimeoutError,
@@ -59,7 +56,9 @@ class WoningCoordinator(DataUpdateCoordinator):
             KeyError,
             TypeError,
         ) as err:
+            self.update_interval = timedelta(seconds=FAILED_RETRY_SECONDS)
             raise UpdateFailed(f"CBS index could not be updated: {err}") from err
+        self.update_interval = timedelta(hours=1)
         tables = (
             [REGION_TABLE] if woningtype == "T001100" else [REGION_TABLE, TYPE_TABLE]
         )

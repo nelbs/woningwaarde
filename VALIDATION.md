@@ -14,7 +14,7 @@
 3. Voeg een tweede woning toe met een eigen ID; controleer twee apparaten/sensoren.
 4. Herconfigureer de referentiewaarde; controleer dat dezelfde sensor bijgewerkt wordt.
 5. Herstart en werk handmatig bij binnen 24 uur; controleer dat de opgeslagen CBS-cache gebruikt wordt.
-6. Controleer bij een bronstoring dat de sensor niet beschikbaar wordt en er binnen de 24-uursgrens geen nieuwe netwerkpoging plaatsvindt.
+6. Controleer bij een bronstoring dat de sensor niet beschikbaar wordt en vanaf vijf minuten na de mislukte aanvraag weer kan ophalen, ook na een herstart. Na herstel worden geslaagde aanvragen weer 24 uur gecachet.
 
 ## Testcommando's
 
@@ -42,3 +42,7 @@ Versie 1.0.1: drie extra regressietests voor de ingevoerde woningnaam (inclusief
 ## Versie v1.0.1b7 - 23 oktober 2026
 
 58 geisoleerde tests geslaagd. Nieuwe tests controleren de waarderingsdatum rond Nederlandse middernacht, een westelijke tijdzone, de winteroffset en invoervalidatie op de lokale kalenderdag. HA's tijdzonehelper wordt aangeroepen; in de unit tests is die grens gestubd met expliciete tijdzonebewuste tijdstippen. De bestaande 54 tests blijven slagen. De gebruiker heeft met sensorattributen bevestigd dat Q3 inmiddels opgehaald is; er is geen eigen volledige live HA-test uitgevoerd.
+
+## Versie v1.0.1b8 - 5 november 2026
+
+60 geisoleerde tests geslaagd. Regressiedekking voor vijfminutenretry na een mislukte CBS-aanvraag, behoud van die wachttijd na herstart, gelijktijdige woningen en terugkeer naar 24-uurscache na herstel. Coordinatorcontroles schakelen bij fouten naar vijf minuten en na herstel terug naar een uur. De methodekeuze en oude kwartaalberekeningen zijn verwijderd; een bestaande configuratie met `quarter` gebruikt automatisch de datumberekening. De geldsensor gebruikt `monetary`, `EUR` en `total` voor langetermijnstatistieken zonder reset. Ruff en compilatie gecontroleerd. HA-grenzen zijn gestubd; geen volledige live HA-installatie- of Recorder-test uitgevoerd.

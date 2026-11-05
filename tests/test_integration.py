@@ -68,17 +68,32 @@ def row(period, index):
     return {"Perioden": period, "PrijsindexVerkoopprijzen_1": index}
 
 
+def calculate_at_boundaries(region, woningtype, national, data):
+    latest = max(
+        set.intersection(
+            *(set(calc.index_map(rows)) for rows in (region, woningtype, national))
+        )
+    )
+    return calc.calculate_dated(
+        region,
+        woningtype,
+        national,
+        {**data, "datum": "2020-04-01"},
+        calc._quarter_end_date(latest),
+    )
+
+
 class CalculationTests(unittest.TestCase):
     def test_ratio_and_year_exclusion(self):
-        result = calc.calculate(
-            [row("2020KW01", 100), row("2025KW02", 150), row("2025JJ00", 900)], DATA
-        )
+        rows = [row("2020KW01", 100), row("2025KW02", 150), row("2025JJ00", 900)]
+        result = calculate_at_boundaries(rows, rows, rows, DATA)
         self.assertEqual(result["value"], 375000)
         self.assertEqual(result["latest_period"], "2025KW02")
 
     def test_reference_quarter_not_published(self):
         with self.assertRaises(ValueError):
-            calc.calculate([row("2025KW01", 150)], DATA)
+            rows = [row("2025KW01", 150)]
+            calculate_at_boundaries(rows, rows, rows, DATA)
 
     def test_invalid_prices(self):
         for price in [0, -1, float("nan"), float("inf")]:
@@ -103,16 +118,21 @@ class CalculationTests(unittest.TestCase):
             row("2025KW03", 0),
             row("2025KW04", float("nan")),
         ]
-        self.assertEqual(calc.calculate(rows, DATA)["value"], 300000)
+        self.assertEqual(
+            calculate_at_boundaries(rows, rows, rows, DATA)["value"], 300000
+        )
 
     def test_same_quarter(self):
-        self.assertEqual(calc.calculate([row("2020KW01", 100)], DATA)["value"], 250000)
+        rows = [row("2020KW01", 100)]
+        self.assertEqual(
+            calculate_at_boundaries(rows, rows, rows, DATA)["value"], 250000
+        )
 
     def test_real_cbs_fixtures(self):
         fixtures = json.loads((ROOT / "tests/fixtures/cbs.json").read_text())
         for series, rows in fixtures.items():
             with self.subTest(series=series):
-                result = calc.calculate(rows, DATA)
+                result = calculate_at_boundaries(rows, rows, rows, DATA)
                 self.assertEqual(result["latest_period"], "2026KW02")
                 self.assertEqual(
                     result["value"],
@@ -184,6 +204,37 @@ class CacheTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await restarted.rows("85792NED")
         self.assertEqual(session.calls, 1)
+
+    async def test_failed_attempt_recovers_at_five_minutes_and_caches_daily(self):
+        session = Session(fail=True)
+        client = api.CBSClient(session)
+        with (
+            patch.object(api.time, "time", return_value=100000),
+            self.assertRaises(ValueError),
+        ):
+            await client.rows("85792NED")
+        restarted = api.CBSClient(session)
+        restarted.store = client.store
+        await restarted.load()
+        session.fail = False
+        with (
+            patch.object(api.time, "time", return_value=100299),
+            self.assertRaisesRegex(ValueError, "5 minutes"),
+        ):
+            await restarted.rows("85792NED")
+        self.assertEqual(session.calls, 1)
+        with patch.object(api.time, "time", return_value=100300):
+            results = await asyncio.gather(
+                *(restarted.rows("85792NED") for _ in range(5))
+            )
+        self.assertEqual(session.calls, 2)
+        self.assertTrue(all(result == results[0] for result in results))
+        with patch.object(api.time, "time", return_value=186699):
+            await restarted.rows("85792NED")
+        self.assertEqual(session.calls, 2)
+        with patch.object(api.time, "time", return_value=186700):
+            await restarted.rows("85792NED")
+        self.assertEqual(session.calls, 3)
 
     async def test_expiry_after_24_hours(self):
         session = Session()
@@ -320,6 +371,7 @@ class FakeCoordinatorEntity:
 sys.modules["homeassistant.components"] = types.ModuleType("homeassistant.components")
 sensor_boundary = types.ModuleType("homeassistant.components.sensor")
 sensor_boundary.SensorDeviceClass = types.SimpleNamespace(MONETARY="monetary")
+sensor_boundary.SensorStateClass = types.SimpleNamespace(TOTAL="total")
 sensor_boundary.SensorEntity = type("SensorEntity", (), {})
 sys.modules["homeassistant.components.sensor"] = sensor_boundary
 coordinator_boundary = types.ModuleType("homeassistant.helpers.update_coordinator")
@@ -356,46 +408,53 @@ class SensorNamingTests(unittest.TestCase):
             self.make_sensor("haviklaan 28")._attr_icon, "mdi:home-outline"
         )
 
+    def test_monetary_sensor_supports_long_term_statistics(self):
+        sensor = self.make_sensor("Woning")
+        self.assertEqual(sensor._attr_device_class, "monetary")
+        self.assertEqual(sensor._attr_state_class, "total")
+        self.assertEqual(sensor._attr_native_unit_of_measurement, "EUR")
+        self.assertFalse(hasattr(sensor, "_attr_last_reset"))
+
 
 class CombinedTests(unittest.TestCase):
     def series(self, growth, latest="2025KW01"):
         return [row("2020KW01", 100), row(latest, 100 * growth)]
 
     def test_multiplicative_correction(self):
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             self.series(1.4), self.series(1.3), self.series(1.2), DATA
         )
         self.assertEqual(result["value"], round(250000 * 1.3 * 1.4 / 1.2, 2))
 
     def test_all_types_equals_region(self):
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             self.series(1.4), self.series(1.2), self.series(1.2), DATA
         )
         self.assertEqual(result["value"], 350000)
 
     def test_national_region_equals_type(self):
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             self.series(1.2), self.series(1.3), self.series(1.2), DATA
         )
         self.assertEqual(result["value"], 325000)
 
     def test_uses_latest_common_quarter(self):
         regional = self.series(1.4) + [row("2025KW02", 200)]
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             regional, self.series(1.3), self.series(1.2), DATA
         )
         self.assertEqual(result["latest_period"], "2025KW01")
-        self.assertEqual(result["indices"]["region"]["latest"], 140)
+        self.assertEqual(result["indices"]["region"]["published"], 140)
 
     def test_missing_base_in_one_series_is_error(self):
         with self.assertRaises(ValueError):
-            calc.calculate_combined(
+            calculate_at_boundaries(
                 self.series(1.4), [row("2025KW01", 130)], self.series(1.2), DATA
             )
 
     def test_real_cbs_combination(self):
         fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             fixture["PV25"], fixture["ZW10300"], fixture["NL01"], DATA
         )
         growth = [
@@ -411,7 +470,7 @@ class CombinedTests(unittest.TestCase):
     def test_berekenhet_displayed_example(self):
         # Rounded displayed component values from a single fictitious calculator run.
         # This checks the inferred correction rule, not BerekenHet's date interpolation.
-        result = calc.calculate_combined(
+        result = calculate_at_boundaries(
             self.series(435500 / 250000),
             self.series(413200 / 250000),
             self.series(408200 / 250000),
@@ -446,6 +505,15 @@ coordinator_module = load("coordinator")
 
 
 class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        clock = patch.object(
+            coordinator_module.dt_util,
+            "now",
+            return_value=datetime(2026, 7, 1, tzinfo=UTC),
+        )
+        clock.start()
+        self.addCleanup(clock.stop)
+
     def make_coordinator(self, data, missing_type=False):
         fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
         calls = []
@@ -456,7 +524,7 @@ class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
                 return fixture["PV25"] + fixture["NL01"]
             return [] if missing_type else fixture["ZW10300"]
 
-        entry = types.SimpleNamespace(data={**DATA, **data})
+        entry = types.SimpleNamespace(data={**DATA, "datum": "2020-04-01", **data})
         return coordinator_module.WoningCoordinator(
             None, entry, types.SimpleNamespace(rows=rows, cache={})
         ), calls
@@ -488,9 +556,14 @@ class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
         result = await coordinator._async_update_data()
         self.assertEqual(result["region"], "NL01")
         fixture = json.loads((ROOT / "tests/fixtures/combined_cbs.json").read_text())
-        self.assertEqual(
-            result["value"], calc.calculate(fixture["ZW10300"], DATA)["value"]
+        expected = calc.calculate_dated(
+            fixture["NL01"],
+            fixture["ZW10300"],
+            fixture["NL01"],
+            coordinator.entry.data,
+            coordinator_module.dt_util.now().date(),
         )
+        self.assertEqual(result["value"], expected["value"])
 
     async def test_missing_series_reports_unavailable(self):
         coordinator, _ = self.make_coordinator(
@@ -498,6 +571,22 @@ class CoordinatorTests(unittest.IsolatedAsyncioTestCase):
         )
         with self.assertRaises(FakeUpdateFailed):
             await coordinator._async_update_data()
+
+    async def test_source_failure_uses_short_interval_then_restores_hourly_checks(self):
+        from datetime import timedelta
+        from unittest.mock import AsyncMock
+
+        coordinator, _ = self.make_coordinator(
+            {"region": "PV25", "woningtype": "ZW10300"}
+        )
+        original_rows = coordinator.client.rows
+        coordinator.client.rows = AsyncMock(side_effect=TimeoutError("CBS timed out"))
+        with self.assertRaisesRegex(FakeUpdateFailed, "CBS timed out"):
+            await coordinator._async_update_data()
+        self.assertEqual(coordinator.update_interval, timedelta(minutes=5))
+        coordinator.client.rows = original_rows
+        await coordinator._async_update_data()
+        self.assertEqual(coordinator.update_interval, timedelta(hours=1))
 
 
 class DatedCalculationTests(unittest.TestCase):
@@ -567,12 +656,6 @@ class DatedCalculationTests(unittest.TestCase):
         result = self.run_example("2016-07-01")
         self.assertEqual(result["value"], 309000)
         self.assertFalse(result["is_forecast"])
-
-    def test_old_quarter_mode_remains_reproducible(self):
-        f = self.fixture()
-        v = f["series"]
-        result = calc.calculate_combined(v["PV31"], v["ZW10300"], v["NL01"], f["input"])
-        self.assertEqual(result["value"], 607441.75)
 
     def test_midquarter_reference_interpolates_actual_calendar_days(self):
         from datetime import date
@@ -651,20 +734,11 @@ class DatedCalculationTests(unittest.TestCase):
         self.assertTrue(result["reference_is_forecast"])
         self.assertGreater(result["value"], 309000)
 
-    def test_default_keeps_existing_entries_explicit(self):
-        def default_mode(defaults):
-            return next(
-                key.default()
-                for key in flow_module.schema(defaults).schema
-                if key.schema == "calculation_mode"
-            )
-
-        self.assertEqual(default_mode(DATA), "quarter")
-        self.assertEqual(default_mode({}), "daily_forecast")
-        self.assertEqual(
-            default_mode({**DATA, "calculation_mode": "daily_forecast"}),
-            "daily_forecast",
-        )
+    def test_calculation_choice_removed_for_new_and_existing_entries(self):
+        for defaults in ({}, DATA, {**DATA, "calculation_mode": "quarter"}):
+            with self.subTest(defaults=defaults):
+                keys = {key.schema for key in flow_module.schema(defaults).schema}
+                self.assertNotIn("calculation_mode", keys)
 
     def test_future_valuation_before_reference_rejected(self):
         with self.assertRaises(ValueError):
@@ -672,7 +746,7 @@ class DatedCalculationTests(unittest.TestCase):
 
 
 class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
-    async def test_explicit_mode_and_preserved_daily_cache(self):
+    async def test_old_mode_automatically_uses_date_calculation(self):
         from datetime import date
 
         f = json.loads((ROOT / "tests/fixtures/limburg_20261022.json").read_text())
@@ -689,7 +763,7 @@ class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
                 **f["input"],
                 "region": "PV31",
                 "woningtype": "ZW10300",
-                "calculation_mode": "daily_forecast",
+                "calculation_mode": "quarter",
             }
         )
         coordinator = coordinator_module.WoningCoordinator(
@@ -711,6 +785,15 @@ class DatedCoordinatorTests(unittest.IsolatedAsyncioTestCase):
 
 
 class RefreshTimingTests(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        clock = patch.object(
+            coordinator_module.dt_util,
+            "now",
+            return_value=datetime(2026, 7, 1, tzinfo=UTC),
+        )
+        clock.start()
+        self.addCleanup(clock.stop)
+
     async def test_early_daily_callback_does_not_delay_fetch_another_day(self):
         from datetime import timedelta
 

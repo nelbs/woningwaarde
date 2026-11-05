@@ -1,6 +1,10 @@
 """Numeric monetary sensor per config entry."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, HOUSE_TYPES, REGIONS
@@ -12,6 +16,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
 class WoningwaardeSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.MONETARY
+    _attr_state_class = SensorStateClass.TOTAL
     _attr_native_unit_of_measurement = "EUR"
     _attr_icon = "mdi:home-outline"
     _attr_attribution = (
