@@ -9,8 +9,7 @@ Woningwaarde is a custom component and is installed directly from the Home Assis
 1. Open the marketplace in Home Assistant and add `https://github.com/nelbs/woningwaarde` as a custom component (custom repository) of type **Integration**.
 2. Search for **Woningwaarde** in the marketplace and install it.
 3. Restart Home Assistant.
-4. Go to **Settings > Devices & services**, select **Add integration** and search for **Woningwaarde**.
-5. Follow the setup steps described under Configuration.
+4. Follow the setup steps described under Configuration.
 
 ## Configuration
 
