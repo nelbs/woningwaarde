@@ -4,11 +4,13 @@ Woningwaarde is a Home Assistant integration that estimates the value of your ho
 
 ## Installation
 
-Woningwaarde is installed from the Home Assistant marketplace. You do not need to download or copy any files yourself.
+Woningwaarde is a custom component and is installed directly from the Home Assistant marketplace. You do not need to download or copy any files yourself.
 
-1. In Home Assistant, go to **Settings > Devices & services**.
-2. Select **Add integration** and search for **Woningwaarde**.
-3. Select it and follow the setup steps described under Configuration.
+1. Open the marketplace in Home Assistant and add `https://github.com/nelbs/woningwaarde` as a custom component (custom repository) of type **Integration**.
+2. Search for **Woningwaarde** in the marketplace and install it.
+3. Restart Home Assistant.
+4. Go to **Settings > Devices & services**, select **Add integration** and search for **Woningwaarde**.
+5. Follow the setup steps described under Configuration.
 
 ## Configuration
 
